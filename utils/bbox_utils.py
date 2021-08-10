@@ -23,7 +23,7 @@ def cpwh2xyxy(x):  # (x, y) is center point
     return y
 
 
-def xywh2xyxy(x):
+def xywh2xyxy(x):  # (x, y) is top-left point
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 2] = x[:, 0] + x[:, 2]  # bottom right x
@@ -45,3 +45,35 @@ def letterboxed_keypoint(x, ratio, dw, dh):
     y[:, 0::3] = x[:, 0::3] * ratio[0] + dw
     y[:, 1::3] = x[:, 1::3] * ratio[1] + dh
     return y
+
+
+def normalize_xyxy(x, w, h):
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    y[:, 0] = x[:, 0] / w
+    y[:, 1] = x[:, 1] / h
+    y[:, 2] = x[:, 2] / w
+    y[:, 3] = x[:, 3] / h
+    return y
+
+
+def unnormalize_xyxy(x, w, h):
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    y[:, 0] = x[:, 0] * w
+    y[:, 1] = x[:, 1] * h
+    y[:, 2] = x[:, 2] * w
+    y[:, 3] = x[:, 3] * h
+    return y
+
+def normalize_keypoint(x, w, h):
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    y[:, 0::3] = x[:, 0::3] / w
+    y[:, 1::3] = x[:, 1::3] / h
+    return y
+
+
+def unnormalize_keypoint(x, w, h):
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    y[:, 0::3] = x[:, 0::3] * w
+    y[:, 1::3] = x[:, 1::3] * h
+    return y
+
