@@ -1,0 +1,7 @@
+
+channel_multiple: 1.0
+
+expected_input_shape:
+  - [128, 52, 52]
+  - [256, 26, 26]
+  - [512, 13, 13]

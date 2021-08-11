@@ -52,7 +52,7 @@ class DropBlock(nn.Module):
         return block_mask
 
 
-class DBLinearSheduler(nn.Module):
+class LSDropBlock(nn.Module):  # Linearly scheduled drop block layer
     def __init__(self,
                  block_size: int,
                  total_steps: int,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     print(dropped_sample.size())
 
-    dbs = DBLinearSheduler(5, 100)
+    dbs = LSDropBlock(5, 100)
     print(dbs.drop_values)
 
     for i in range(100):

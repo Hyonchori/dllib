@@ -2,8 +2,9 @@
 import torch
 import torch.nn as nn
 import math
+import warnings
 
-from attention_layer import SEModule
+from .attention_layers import SEModule
 
 
 def autopad(kernel, padding=None):
@@ -150,7 +151,7 @@ class BottleneckCSP(nn.Module):
 
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 3)):
+    def __init__(self, c1, c2, k=(5, 9, 13)):
         super().__init__()
         c_mid = c1 // 2
         self.conv1 = ConvBnAct(c1, c_mid, 1, 1)
@@ -159,7 +160,9 @@ class SPP(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
-        return self.conv2(torch.cat([x] + [m(x) for m in self.m], 1))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # suppress torch 1.9.0 max_pool2d() warning
+            return self.conv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
 class Focus(nn.Module):
@@ -192,9 +195,9 @@ class ConvDownSampling(nn.Module):
         return torch.cat((x, y), dim=1)
 
 
-import time
-
 if __name__ == "__main__":
+    import time
+
     c_in = 3
     c_out = 12
     batch_size = 32
