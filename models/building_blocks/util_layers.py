@@ -13,3 +13,8 @@ class ConcatLayer(nn.Module):
     def forward(self, xs):
         # xs = iterable of torch.tensor: (tensor, tensor, ...) or [tensor, tensor, ...]
         return torch.cat(xs, self.d)
+
+
+class Upsample(nn.Upsample):
+    def __init__(self, size=None, scale_factor=None, mode="nearest"):
+        super().__init__(size, scale_factor, mode)

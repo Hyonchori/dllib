@@ -14,7 +14,12 @@ def model_info(model, verbose=False, input_shape=(3, 640, 640), batch_size=32):
                   (i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std()))
 
     from thop import profile
-    img = torch.zeros((1, *input_shape), device=next(model.parameters()).device)
+    if model.mode == "backbone":
+        img = torch.zeros((1, *input_shape), device=next(model.parameters()).device)
+    elif model.mode == "neck":
+        img = [torch.zeros((1, *shape), device=next(model.parameters()).device) for shape in input_shape]
+    for im in img:
+        print(im.shape)
     flops = profile(copy.deepcopy(model), inputs=(img,), verbose=False)[0] / 1E9 * 2
     size = img.shape
     fs = ", {:.1f} GFLOPs given size{}".format(flops * batch_size, (batch_size, *size[1:]))

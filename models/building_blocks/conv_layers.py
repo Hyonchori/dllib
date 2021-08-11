@@ -27,14 +27,14 @@ class ConvBnAct(nn.Module):
         return self.act(self.bn(self.conv(x)))
 
 
-def DWConv(c1, c2, k=3, s=1, p=None, act=True, bn=True):
-    # Depth-wise ConvBnAct
-    return ConvBnAct(c1, c2, k, s, p=p, g=math.gcd(c1, c2), act=act, bn=bn)
+class PWConv(ConvBnAct):
+    def __init__(self, c1, c2, s=1, g=1, p=None, act=True, bn=True):
+        super().__init__(c1, c2, 1, s, p=p, g=g, act=act, bn=bn)
 
 
-def PWConv(c1, c2, s=1, g=1, p=None, act=True, bn=True):
-    # Point-wise ConvBnAct
-    return ConvBnAct(c1, c2, 1, s, p=p, g=g, act=act, bn=bn)
+class DWConv(ConvBnAct):
+    def __init__(self, c1, c2, k=3, s=1, p=None, act=True, bn=True):
+        super().__init__(c1, c2, k, s, p=p, g=math.gcd(c1, c2), act=act, bn=bn)
 
 
 class DWSConv(nn.Module):
