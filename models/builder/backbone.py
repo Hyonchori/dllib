@@ -22,8 +22,7 @@ class BuildBackbone(nn.Module):
                 self.yaml = yaml.safe_load(f)
 
         self.input_shape = self.yaml["expected_input_shape"]
-        print(self.input_shape)
-        self.model = parse_model_from_cfg(self.yaml)
+        self.model = parse_model_from_cfg(self.yaml, self.mode)
         self.output_layers = [x - 1 for x in self.yaml["output_layers"] if x > 0]
         if not self.output_layers:
             self.output_layers = [x for x in self.yaml["output_layers"] if x < 0]
@@ -42,6 +41,11 @@ class BuildBackbone(nn.Module):
             elif isinstance(layer, ConcatLayer):
                 tmp = [output[t] for t in layer.target_layers]
                 x = layer(tmp)
+            elif isinstance(layer, Upsample):
+                tmp = output[layer.target_layer]
+                x = layer(tmp)
+            elif isinstance(layer, GetLayer):
+                x = output[layer.target_layer]
             else:
                 x = layer(x)
             output.append(x)
@@ -50,15 +54,12 @@ class BuildBackbone(nn.Module):
 
 
 if __name__ == "__main__":
-    import time
-
     cfg = "../cfgs/base_backbone_m.yaml"
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
     sample = torch.randn(bs, 3, 412, 412)
-    t1 = time.time()
+
     pred = bb(sample, epoch=20)
-    print(time.time() - t1)
     for p in pred:
         print(p.size())

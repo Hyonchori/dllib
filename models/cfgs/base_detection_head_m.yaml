@@ -1,0 +1,29 @@
+
+channel_multiple: 1.0
+
+nc: 2
+# output channel: anchors * (nc + 4(bbox) + 1(conf))
+
+anchors:
+  - [116,90, 156,198, 373,326]
+  - [30,61, 62,45, 59,119]
+  - [10,13, 16,30, 33,23]
+
+expected_input_shape:
+  - [256, 52, 52]
+  - [512, 26, 26]
+  - [1024, 13, 13]
+
+architecture:
+  # [layer_idx, iter, module, args]
+  [
+    [PWConv, [1024, 21]],
+    [GetLayer, [-3]],
+    [PWConv, [512, 21]],
+    [GetLayer, [-6]],
+    [PWConv, [256, 21]],
+  ]
+
+output_layers:
+  # please input layer_idx
+  [-1, -3, -5]

@@ -16,5 +16,12 @@ class ConcatLayer(nn.Module):
 
 
 class Upsample(nn.Upsample):
-    def __init__(self, size=None, scale_factor=None, mode="nearest"):
+    def __init__(self, size=None, scale_factor=None, mode="nearest", target_layer=-1):
         super().__init__(size, scale_factor, mode)
+        self.target_layer = target_layer
+
+
+class GetLayer(nn.Module):
+    def __init__(self, target_layer=-1):
+        super().__init__()
+        self.target_layer = target_layer

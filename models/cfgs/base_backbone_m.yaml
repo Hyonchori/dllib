@@ -9,19 +9,19 @@ architecture:
   [
     [Focus, [3, 36]],
     [ConvBnAct, [36, 64, 3, 2]],
-    [BottleneckCSP, [64, 64, 2]],
+    [BottleneckCSP, [64, 64, 2, 0.5, True, False]],
 
     [ConvBnAct, [64, 128, 3, 2]],
-    [BottleneckCSP, [128, 128, 6]],
+    [BottleneckCSP, [128, 128, 6, 0.5, True, False]],
     [LSDropBlock, [7, 30]],
 
     [ConvBnAct, [128, 256, 3, 2]],
-    [BottleneckCSP, [256, 256, 6]],
+    [BottleneckCSP, [256, 256, 6, 0.5, True, False]],
     [LSDropBlock, [5, 30]],
 
     [ConvBnAct, [256, 512, 3, 2]],
     [SPP, [512, 512, [5, 9, 13]]],
-    [BottleneckCSP, [512, 512, 6]],
+    [BottleneckCSP, [512, 512, 6, 0.5, True, False]],
     [LSDropBlock, [2, 30]],
   ]
 

@@ -9,10 +9,25 @@ expected_input_shape:
 architecture:
   # [layer_idx, iter, module, args]
   [
-    [PWConv, [512, 512]],
-    [Upsample, [None, 2, "nearest"]]
+    [PWConv, [512, 256]],
+    [Upsample, [None, 2, "nearest", -1]],
+    [ConcatLayer, [1, [-1, -4]]],
+    [BottleneckCSP, [512, 512, 3, 0.5, False, False]],
+
+    [ConvBnAct, [512, 128]],
+    [Upsample, [None, 2, "nearest", -1]],
+    [ConcatLayer, [1, [-1, -9]]],
+    [BottleneckCSP, [256, 256, 3, 0.5, False, False]],
+
+    [ConvBnAct, [256, 256, 3, 2]],
+    [ConcatLayer, [1, [-1, -6]]],
+    [BottleneckCSP, [768, 512, 3, 0.5, False, False]],
+
+    [ConvBnAct, [512, 512, 3, 2]],
+    [ConcatLayer, [1, [-1, -12]]],
+    [BottleneckCSP, [768, 1024, 3, 0.5, False, False]]
   ]
 
 output_layers:
   # please input layer_idx
-  [-1]
+  [-1, -4, -7]

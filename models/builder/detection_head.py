@@ -8,10 +8,10 @@ from dllib.models.builder.parse_model import parse_model_from_cfg
 from dllib.utils.model_utils import model_info
 
 
-class BuildNeck(nn.Module):
+class BuildHead(nn.Module):
     def __init__(self, cfg, info=False):
         super().__init__()
-        self.mode = "neck"
+        self.mode = "head"
         if isinstance(cfg, dict):
             self.yaml = cfg
         else:
@@ -22,6 +22,16 @@ class BuildNeck(nn.Module):
                 self.yaml = yaml.safe_load(f)
 
         self.input_shape = self.yaml["expected_input_shape"]
+        self.nc = self.yaml["nc"]
+        self.no = self.nc + 5
+        anchors = self.yaml["anchors"]
+        self.nl = len(anchors)
+        self.na = len(anchors[0]) // 2
+        self.grid = [torch.zeros(1)] * self.nl
+        a = torch.tensor(anchors).float().view(self.nl, -1, 2)
+        self.register_buffer("anchors", a)
+        self.register_buffer("anchor_grid", a.clone().view(self.nl, 1, -1, 1, 1, 2))
+
         self.model = parse_model_from_cfg(self.yaml, self.mode)
         self.output_layers = self.yaml["output_layers"]
         if not self.output_layers:
@@ -55,20 +65,25 @@ class BuildNeck(nn.Module):
                 x = layer(x)
             output.append(x)
         result = [output[t] for t in sorted(self.output_layers)]
+
+        for i in range(self.nl):
+            bs, _, ny, nx = result[i].shape
+            result[i] = result[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
         return result
 
 
 if __name__ == "__main__":
-    cfg = "../cfgs/base_neck_m.yaml"
-    neck = BuildNeck(cfg, info=True)
+    cfg = "../cfgs/base_detection_head_m.yaml"
+    head = BuildHead(cfg, info=True)
 
     bs = 1
     sample = [
-        torch.randn(bs, 128, 52, 52),
-        torch.randn(bs, 256, 26, 26),
-        torch.randn(bs, 512, 13, 13),
+        torch.randn(bs, 256, 52, 52),
+        torch.randn(bs, 512, 26, 26),
+        torch.randn(bs, 1024, 13, 13),
     ]
 
-    pred = neck(sample)
+    pred = head(sample)
     for p in pred:
         print(p.size())
