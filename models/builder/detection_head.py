@@ -8,7 +8,7 @@ from dllib.models.builder.parse_model import parse_model_from_cfg
 from dllib.utils.model_utils import model_info
 
 
-class BuildHead(nn.Module):
+class BuildDetectionHead(nn.Module):
     def __init__(self, cfg, info=False):
         super().__init__()
         self.mode = "head"
@@ -22,6 +22,7 @@ class BuildHead(nn.Module):
                 self.yaml = yaml.safe_load(f)
 
         self.input_shape = self.yaml["expected_input_shape"]
+        self.strides = self.yaml["strides"]
         self.nc = self.yaml["nc"]
         self.no = self.nc + 5
         anchors = self.yaml["anchors"]
@@ -68,14 +69,24 @@ class BuildHead(nn.Module):
 
         for i in range(self.nl):
             bs, _, ny, nx = result[i].shape
+            if self.grid[i].shape[2:4] != result[i].shape[2:4]:
+                self.grid[i] = self._make_grid(nx, ny).to(result[i].device)
             result[i] = result[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
-
+            result[i][..., :5] = result[i][..., :5].sigmoid()
+            result[i][..., 0:2] = (result[i][..., 0:2] + self.grid[i]) * self.strides[i]
+            result[i][..., 2:4] = (result[i][..., 2:4]) * self.anchor_grid[i]
+            result[i][..., 5:] = result[i][..., 5:].softmax(-1)
         return result
+
+    @staticmethod
+    def _make_grid(nx, ny):
+        yv, xv = torch.meshgrid([torch.arange(ny), torch.arange(nx)])
+        return torch.stack((xv, yv), 2).view((1, 1, ny, nx, 2)).float()
 
 
 if __name__ == "__main__":
     cfg = "../cfgs/base_detection_head_m.yaml"
-    head = BuildHead(cfg, info=True)
+    head = BuildDetectionHead(cfg, info=True)
 
     bs = 1
     sample = [
@@ -85,5 +96,12 @@ if __name__ == "__main__":
     ]
 
     pred = head(sample)
+    for i in range(len(pred)):
+        bs, _, _, _, info = pred[i].shape
+        pred[i] = pred[i].view(bs, -1, info)
+    pred = torch.cat(pred, 1)
+
+    from dllib.utils.bbox_utils import non_maximum_suppression
+    pred = non_maximum_suppression(pred)
     for p in pred:
-        print(p.size())
+        print(p)

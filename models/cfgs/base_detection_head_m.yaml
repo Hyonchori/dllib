@@ -4,10 +4,14 @@ channel_multiple: 1.0
 nc: 2
 # output channel: anchors * (nc + 4(bbox) + 1(conf))
 
+strides:
+  # Used with anchors for output bbox
+  [32, 16, 8]
+
 anchors:
-  - [116,90, 156,198, 373,326]
-  - [30,61, 62,45, 59,119]
-  - [10,13, 16,30, 33,23]
+  - [116,90, 156,198, 373,326]  # /32
+  - [30,61, 62,45, 59,119]  # /16
+  - [10,13, 16,30, 33,23]  # /8
 
 expected_input_shape:
   - [256, 52, 52]
