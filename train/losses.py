@@ -44,7 +44,5 @@ def detection_loss(pred, target, iou_thr=0.4):
         p_xyxy = cpwh2xyxy(p)
         t_xyxy = xywh2xyxy(t)
         pi = 15
-        print(p_xyxy[pi])
-        print(t_xyxy[0])
-        iou = bbox_iou(p_xyxy[pi], t_xyxy[0])
+        iou = bbox_iou(p_xyxy, t_xyxy[0])
         print(iou)
