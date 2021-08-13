@@ -1,10 +1,7 @@
 
 import torch
 
-
-
-
-
+from dllib.train.losses import detection_loss
 
 
 if __name__ == "__main__":
@@ -16,7 +13,15 @@ if __name__ == "__main__":
                           info=True)
 
     dataloader = get_coco2017_valid_dataloader(img_size=(412, 412),
-                                               mode="detection")
-    for img0, img_b, bboxes0, bbox_b, keypoints0, keypoint_b, img_name in dataloader:
-        print(img_b.shape)
+                                               mode="detection",
+                                               batch_size=8)
+    for img0, img_b, bboxes0, bbox_b, img_name in dataloader:
+        pred = model(img_b.float())
+        for i in range(len(pred)):
+            bs, _, _, _, info = pred[i].shape
+            pred[i] = pred[i].view(bs, -1, info)
+        pred = torch.cat(pred, 1)
+
+        loss = detection_loss(pred, bbox_b)
+
         break

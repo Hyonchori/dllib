@@ -183,8 +183,8 @@ data_root = "/media/daton/D6A88B27A88B0569/dataset/coco"
 train_root = os.path.join(data_root, "train2017", "train2017")
 valid_root = os.path.join(data_root, "val2017", "val2017")
 annot_root = os.path.join(data_root, "annotations_trainval2017", "annotations")
-label_file = "coco_labels80.txt"
-keypoint_label_file = "coco_keypoint_labels.txt"
+label_file = os.path.join(data_root, "coco_labels80.txt")
+keypoint_label_file = os.path.join(data_root, "coco_keypoint_labels.txt")
 
 
 def get_coco2017_valid_dataloader(img_size: (int, int),
