@@ -8,7 +8,7 @@ import albumentations as AT
 
 from dllib.utils.img_utils import colors, letterbox, plot_one_box, plot_one_keypoint
 from dllib.utils.bbox_utils import xywh2xyxy, letterboxed_xywh, letterboxed_keypoint, \
-                                normalize_xyxy, normalize_keypoint
+                                normalize_xyxy, normalize_keypoint, xywh2cpwh
 
 
 class COCODataset(torch.utils.data.Dataset):
@@ -183,8 +183,42 @@ data_root = "/media/daton/D6A88B27A88B0569/dataset/coco"
 train_root = os.path.join(data_root, "train2017", "train2017")
 valid_root = os.path.join(data_root, "val2017", "val2017")
 annot_root = os.path.join(data_root, "annotations_trainval2017", "annotations")
-label_file = "coco_labels.txt"
+label_file = "coco_labels80.txt"
 keypoint_label_file = "coco_keypoint_labels.txt"
+
+
+def get_coco2017_valid_dataloader(img_size: (int, int),
+                                  mode: str="detection",
+                                  target_cls: str=None,
+                                  batch_size: int=16,
+                                  transform : AT.core.composition.Compose=None):
+    dataset = COCODataset(valid_root, annot_root, target_cls=target_cls, mode=mode, img_size=img_size,
+                          labels=label_file, keypoint_labels=keypoint_label_file,
+                          transform=transform)
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=dataset.collate_fns[mode]
+    )
+    return dataloader
+
+
+def get_coco2017_train_dataloader(img_size: (int, int),
+                                  mode: str="detection",
+                                  target_cls: str=None,
+                                  batch_size: int=16,
+                                  transform : AT.core.composition.Compose=None):
+    dataset = COCODataset(train_root, annot_root, target_cls=target_cls, mode=mode, img_size=img_size,
+                          labels=label_file, keypoint_labels=keypoint_label_file,
+                          transform=transform)
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=dataset.collate_fns[mode]
+    )
+    return dataloader
 
 
 def get_coco2017dataloader(img_size: (int, int),
@@ -194,31 +228,15 @@ def get_coco2017dataloader(img_size: (int, int),
                            valid_batch: int=16,
                            train_transform: AT.core.composition.Compose=None,
                            valid_transform: AT.core.composition.Compose=None):
-    train_dataset = COCODataset(train_root, annot_root, target_cls=target_cls, mode=mode, img_size=img_size,
-                                labels=label_file, keypoint_labels=keypoint_label_file,
-                                transform=train_transform)
-    valid_dataset = COCODataset(valid_root, annot_root, target_cls=target_cls, mode=mode, img_size=img_size,
-                                labels=label_file, keypoint_labels=keypoint_label_file,
-                                transform=valid_transform)
-    train_dataloader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=train_batch,
-        shuffle=True,
-        collate_fn=train_dataset.collate_fns[mode]
-    )
-    valid_dataloader = torch.utils.data.DataLoader(
-        valid_dataset,
-        batch_size=valid_batch,
-        shuffle=False,
-        collate_fn=valid_dataset.collate_fns[mode]
-    )
+    train_dataloader = get_coco2017_train_dataloader(img_size, mode, target_cls, train_batch, train_transform)
+    valid_dataloader = get_coco2017_valid_dataloader(img_size, mode, target_cls, valid_batch, valid_transform)
     return train_dataloader, valid_dataloader
 
 
 if __name__ == "__main__":
     import cv2
 
-    train_dataloader, valid_dataloader = get_coco2017dataloader(
+    '''train_dataloader, valid_dataloader = get_coco2017dataloader(
         img_size=412, mode="detection", target_cls="person"
     )
 
@@ -227,16 +245,16 @@ if __name__ == "__main__":
         print(img_b.shape)
         for img, bbox in zip(img_b, bbox_b):
             _, w, h = img.size()
-            xyxy = xywh2xyxy(bbox)
-            xyxy_n = normalize_xyxy(xyxy, w, h)
-        break
+            cpwh = xywh2cpwh(bbox)
+            print(cpwh)
+        break'''
 
 
-    '''dataset = COCODataset(img_root, annot_root,
+    dataset = COCODataset(valid_root, annot_root,
                           labels=label_file, keypoint_labels=keypoint_label_file,
                           target_cls="person", mode="keypoint")
     labels = dataset.labels
-
+    '''
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=32,
@@ -258,7 +276,7 @@ if __name__ == "__main__":
         break'''
 
 
-    '''for img0, img, bboxes0, bboxes, keypoints0, keypoints, img_name in dataset:
+    for img0, img, bboxes0, bboxes, keypoints0, keypoints, img_name in dataset:
         print("\n---")
         print(img0.shape)
         print(img.shape)
@@ -275,7 +293,7 @@ if __name__ == "__main__":
         for kp in keypoints0:
             plot_one_keypoint(kp, img0)
 
-        img_lt = np.ascontiguousarray(img[0].numpy().transpose(1, 2, 0))
+        '''img_lt = np.ascontiguousarray(img[0].numpy().transpose(1, 2, 0))
         for *xywh, conf, cls in bboxes:
             xyxy = xywh2xyxy(torch.tensor(xywh).view(1, 4)).view(-1)
             c = int(cls)
@@ -283,9 +301,8 @@ if __name__ == "__main__":
             plot_one_box(xyxy, img_lt, label=label, color=colors(c, True))
 
         for kp in keypoints:
-            plot_one_keypoint(kp, img_lt)
+            plot_one_keypoint(kp, img_lt)'''
 
         cv2.imshow("img0", img0)
-        cv2.imshow("img", img_lt)
+        #cv2.imshow("img", img_lt)
         cv2.waitKey(0)
-'''

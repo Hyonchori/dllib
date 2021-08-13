@@ -7,7 +7,8 @@ from dllib.utils.general_utils import get_module_name, make_divisible
 
 
 def parse_model_from_cfg(cfg, mode):  # cfg: dict
-    print('\n%5s%10s   %-60s%-30s' % ('idx', 'params', 'module', 'arguments'))
+    print("\n{} architecture:".format(mode))
+    print('%5s%10s   %-60s%-30s' % ('idx', 'params', 'module', 'arguments'))
     cm = cfg["channel_multiple"]
     layers = []
     for i, (m, args) in enumerate(cfg["architecture"]):

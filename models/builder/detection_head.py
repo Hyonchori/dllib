@@ -39,7 +39,7 @@ class BuildDetectionHead(nn.Module):
             self.output_layers = [x for x in self.yaml["output_layers"] if x < 0]
 
         if info:
-            self.info(verbose=False)
+            #self.info(verbose=False)
             pass
 
     def info(self, verbose=False, batch_size=1):
@@ -69,13 +69,15 @@ class BuildDetectionHead(nn.Module):
 
         for i in range(self.nl):
             bs, _, ny, nx = result[i].shape
-            if self.grid[i].shape[2:4] != result[i].shape[2:4]:
-                self.grid[i] = self._make_grid(nx, ny).to(result[i].device)
             result[i] = result[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
             result[i][..., :5] = result[i][..., :5].sigmoid()
+            result[i][..., 5:] = result[i][..., 5:].softmax(-1)
+
+            if self.grid[i].shape[2:4] != result[i].shape[2:4]:
+                self.grid[i] = self._make_grid(nx, ny).to(result[i].device)
             result[i][..., 0:2] = (result[i][..., 0:2] + self.grid[i]) * self.strides[i]
             result[i][..., 2:4] = (result[i][..., 2:4]) * self.anchor_grid[i]
-            result[i][..., 5:] = result[i][..., 5:].softmax(-1)
+
         return result
 
     @staticmethod
@@ -98,10 +100,15 @@ if __name__ == "__main__":
     pred = head(sample)
     for i in range(len(pred)):
         bs, _, _, _, info = pred[i].shape
+        print(pred[i][..., 5:])
+        print(pred[i].shape)
         pred[i] = pred[i].view(bs, -1, info)
     pred = torch.cat(pred, 1)
+    print("")
+    print(pred.shape)
 
-    from dllib.utils.bbox_utils import non_maximum_suppression
+    '''from dllib.utils.bbox_utils import non_maximum_suppression
     pred = non_maximum_suppression(pred)
+    print("")
     for p in pred:
-        print(p)
+        print(p)'''

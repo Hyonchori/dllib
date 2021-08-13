@@ -35,6 +35,14 @@ def xywh2xyxy(x):  # (x, y) is top-left point
     return y
 
 
+def xywh2cpwh(x):  # (x, y) is top-left point
+    # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
+    y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+    y[:, 0] = x[:, 0] + x[:, 2] / 2  # center point x
+    y[:, 1] = x[:, 1] + x[:, 3] / 2  # center point y
+    return y
+
+
 def letterboxed_xywh(x, ratio, dw, dh):
     y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
     y[:, 0] = x[:, 0] * ratio[0] + dw
@@ -104,7 +112,6 @@ def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, m
     output = [torch.zeros((0, 6), device=pred.device)] * pred.shape[0]
     for xi, x in enumerate(pred):
         x = x[xc[xi]]
-
         if labels and len(labels[xi]):
             l = labels[xi]
             v = torch.zeros((len(l), nc + 5), device=x.device)

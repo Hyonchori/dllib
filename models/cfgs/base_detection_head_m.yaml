@@ -1,7 +1,7 @@
 
 channel_multiple: 1.0
 
-nc: 2
+nc: 4
 # output channel: anchors * (nc + 4(bbox) + 1(conf))
 
 strides:
@@ -21,11 +21,11 @@ expected_input_shape:
 architecture:
   # [layer_idx, iter, module, args]
   [
-    [PWConv, [1024, 21]],
+    [PWConv, [1024, 27]],
     [GetLayer, [-3]],
-    [PWConv, [512, 21]],
+    [PWConv, [512, 27]],
     [GetLayer, [-6]],
-    [PWConv, [256, 21]],
+    [PWConv, [256, 27]],
   ]
 
 output_layers:
