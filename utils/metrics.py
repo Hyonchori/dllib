@@ -32,7 +32,6 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
     # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
 
     box2 = box2.view(1, 6)
-    print(box1.shape, box2.shape)
 
     # Get the coordinates of bounding boxes
     if x1y1x2y2:  # x1, y1, x2, y2 = box1

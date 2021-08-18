@@ -55,22 +55,29 @@ class ComputeDetectionLoss:
             t_xyxys = xywh2xyxy(t)
 
             loss_per_img = torch.zeros(1, device=self.device)
+            n = 1
             for t_xyxy in t_xyxys:
                 ious = bbox_iou(p_xyxys, t_xyxy)
                 valid_idx = ious > self.iou_thr
                 valid_p = p_xyxys[valid_idx]
-
+                if valid_p.shape[0] == 0:
+                    continue
+                n += 1
                 zero_idx = ious == 0
                 zero_p = p_xyxys[zero_idx]
-                target_pos_conf = torch.ones((valid_p.shape[0], 1))
-                target_neg_conf = torch.zeros((zero_p.shape[0], 1))
-                conf_loss_pos = self.BCEobj(valid_p[:, 4:5], target_pos_conf)
-                conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf) * 0.3)
+                if zero_p.shape[0] != 0:
+                    target_pos_conf = torch.ones((valid_p.shape[0], 1), device=self.device)
+                    target_neg_conf = torch.zeros((zero_p.shape[0], 1), device=self.device)
+                    conf_loss_pos = self.BCEobj(valid_p[:, 4:5], target_pos_conf)
+                    conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf) * 0.3)
+                else:
+                    conf_loss = torch.tensor(0, device=self.device)
+
 
                 iou_loss = torch.mean(1 - ious[valid_idx])
 
                 target_cls = int(t_xyxy[-1].item())
-                target_cls_onehot = torch.zeros((valid_p.shape[0], self.nc))
+                target_cls_onehot = torch.zeros((valid_p.shape[0], self.nc), device=self.device)
                 target_cls_onehot[:, target_cls - 1] = 1.
                 pred_cls = torch.softmax(valid_p[:, 5:], -1)
                 cls_loss = self.BCEcls(pred_cls, target_cls_onehot)
@@ -79,7 +86,7 @@ class ComputeDetectionLoss:
                     self.lw["conf"] * conf_loss + \
                     self.lw["cls"] * cls_loss
                 loss_per_img += loss
-            loss_per_img /= len(t_xyxys)
+            loss_per_img /= n
             total_loss += loss_per_img
-        total_loss /= len(p)
+        total_loss /= len(pred)
         return total_loss

@@ -97,7 +97,6 @@ def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, m
     assert 0 <= conf_thr <= 1, f'Invalid Confidence threshold {conf_thr}, valid values are between 0.0 and 1.0'
     assert 0 <= iou_thr <= 1, f'Invalid IoU {iou_thr}, valid values are between 0.0 and 1.0'
 
-    print(pred.shape)
     nc = pred.shape[2] - 5
     xc = pred[..., 4] > conf_thr
 

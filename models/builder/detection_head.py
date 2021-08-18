@@ -71,7 +71,7 @@ class BuildDetectionHead(nn.Module):
             bs, _, ny, nx = result[i].shape
             result[i] = result[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
             result[i][..., :5] = result[i][..., :5].sigmoid()
-            result[i][..., 5:] = result[i][..., 5:].softmax(-1)
+            #result[i][..., 5:] = result[i][..., 5:].softmax(-1)
 
             if self.grid[i].shape[2:4] != result[i].shape[2:4]:
                 self.grid[i] = self._make_grid(nx, ny).to(result[i].device)

@@ -109,6 +109,10 @@ class COCODataset(torch.utils.data.Dataset):
             img = transformed["image"]
             bboxes = transformed["bboxes"]
 
+        if len(bboxes0) == 0:
+            bboxes0 = [bboxes0]
+            bboxes = [bboxes]
+
         bboxes0 = np.stack(bboxes0)
         bboxes = torch.from_numpy(np.stack(bboxes))
 
@@ -140,6 +144,14 @@ class COCODataset(torch.utils.data.Dataset):
             bboxes = transformed["bboxes"]
             keypoints = transformed["keypoints"]
 
+        if len(bboxes0) == 0:
+            bboxes0 = [bboxes0]
+            bboxes = [bboxes]
+
+        if len(keypoints0) == 0:
+            keypoints0 = [keypoints0]
+            keypoints = [keypoints]
+
         bboxes0 = np.stack(bboxes0)
         bboxes = torch.from_numpy(np.stack(bboxes))
 
@@ -156,7 +168,8 @@ class COCODataset(torch.utils.data.Dataset):
             im = im[:, :, ::-1].transpose(2, 0, 1)
             im = np.ascontiguousarray(im)
             im = torch.from_numpy(im).unsqueeze(0)
-
+            if len(bbox[0]) == 0:
+                continue
             bbox = letterboxed_xywh(bbox, ratio, dw, dh)
             img_b.append(im)
             bbox_b.append(bbox)
