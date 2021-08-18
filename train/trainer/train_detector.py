@@ -16,30 +16,14 @@ from dllib.data.for_train.coco_dataset import get_coco2017dataloader
 from dllib.models.detector import BuildDetector
 
 
-def parse_opt(known=False):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--backbone_cfg", type=str, help="backbone.yaml path",
-                        default="../../models/cfgs/base_backbone_m.yaml")
-    parser.add_argument("--neck_cfg", type=str, help="backbone.yaml path",
-                        default="../../models/cfgs/base_neck_m.yaml")
-    parser.add_argument("--head_cfg", type=str, help="backbone.yaml path",
-                        default="../../models/cfgs/base_detection_head_m.yaml")
-    parser.add_argument("--weights", type=str, help="initial weights path")
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=18)
-    parser.add_argument("--img_size", type=int, default=412)
-    parser.add_argument("--save_dir", type=str, default="../../weights")
-    parser.add_argument("--name", type=str, default="detector")
-    parser.add_argument("--save_interval", type=int, default=10)
-    opt = parser.parse_known_args()[0] if known else parser.parse_args()
-    return opt
-
-
 def main(opt):
     model = BuildDetector(backbone_cfg=opt.backbone_cfg,
                           neck_cfg=opt.neck_cfg,
                           detector_head_cfg=opt.head_cfg,
                           info=True).cuda()
+    if opt.weights is not None:
+        wts = torch.load(opt.weights)
+        model.load_state_dict(wts)
     device = next(model.parameters()).device
 
     train_transform = A.Compose([
@@ -70,9 +54,11 @@ def main(opt):
         print("\n--- {}".format(e))
         time.sleep(0.5)
         train_loss = train(model, optimizer, e, valid_dataloader, compute_loss, loss_weight, device)
+        time.sleep(0.5)
         print(train_loss)
 
         valid_loss = evaluate(model, e, valid_dataloader, compute_loss, device)
+        time.sleep(0.5)
         print(valid_loss)
 
         if os.path.isfile(log_save_dir):
@@ -94,7 +80,7 @@ def main(opt):
         loss = sum(valid_loss)
         if loss < best_loss:
             best_loss = loss
-            best_model_wts = copy.deepcopy(model.state_dict)
+            best_model_wts = copy.deepcopy(model.state_dict())
 
         lr_sch.step()
         if e % save_interval == 0:
@@ -159,6 +145,26 @@ def evaluate(model, epoch, dataloader, compute_loss, device):
     for j, _ in enumerate(train_loss):
         train_loss[j] /= len(pbar)
     return train_loss
+
+
+def parse_opt(known=False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--backbone_cfg", type=str, help="backbone.yaml path",
+                        default="../../models/cfgs/base_backbone_m.yaml")
+    parser.add_argument("--neck_cfg", type=str, help="backbone.yaml path",
+                        default="../../models/cfgs/base_neck_m.yaml")
+    parser.add_argument("--head_cfg", type=str, help="backbone.yaml path",
+                        default="../../models/cfgs/base_detection_head_m.yaml")
+    parser.add_argument("--weights", type=str, help="initial weights path",
+                        default="../../weights/base_detector.pt")
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=18)
+    parser.add_argument("--img_size", type=int, default=412)
+    parser.add_argument("--save_dir", type=str, default="../../weights")
+    parser.add_argument("--name", type=str, default="base_detector")
+    parser.add_argument("--save_interval", type=int, default=10)
+    opt = parser.parse_known_args()[0] if known else parser.parse_args()
+    return opt
 
 
 if __name__ == "__main__":
