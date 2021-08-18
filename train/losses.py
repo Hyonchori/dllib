@@ -36,13 +36,50 @@ class FocalLoss(nn.Module):
             return loss
 
 
-def detection_loss(pred, target, iou_thr=0.4):
-    for p, t in zip(pred, target):
-        print("\n---")
-        print(p.shape)
-        print(t.shape)
-        p_xyxy = cpwh2xyxy(p)
-        t_xyxy = xywh2xyxy(t)
-        pi = 15
-        iou = bbox_iou(p_xyxy, t_xyxy[0])
-        print(iou)
+class ComputeDetectionLoss:
+    def __init__(self, model, iou_thr=0.4, loss_weight={"iou": 0.5, "conf": 0.3, "cls": 0.2}):
+        self.device = next(model.parameters()).device
+
+        self.BCEcls = FocalLoss(nn.BCEWithLogitsLoss())
+        self.BCEobj = FocalLoss(nn.BCEWithLogitsLoss())
+        self.iou_thr = iou_thr
+        self.lw = loss_weight
+        self.nc = model.head.nc
+
+    def __call__(self, pred, targets, epoch=None):
+        # pred: (bs, total_predicted_bbox_num, 4 + 1 + cls_num)
+        # target: (bs, total_target_bbox_num, 4 + 1 + cls)
+        total_loss = torch.zeros(1, device=self.device)
+        for p, t in zip(pred, targets):
+            p_xyxys = cpwh2xyxy(p)
+            t_xyxys = xywh2xyxy(t)
+
+            loss_per_img = torch.zeros(1, device=self.device)
+            for t_xyxy in t_xyxys:
+                ious = bbox_iou(p_xyxys, t_xyxy)
+                valid_idx = ious > self.iou_thr
+                valid_p = p_xyxys[valid_idx]
+
+                zero_idx = ious == 0
+                zero_p = p_xyxys[zero_idx]
+                target_pos_conf = torch.ones((valid_p.shape[0], 1))
+                target_neg_conf = torch.zeros((zero_p.shape[0], 1))
+                conf_loss_pos = self.BCEobj(valid_p[:, 4:5], target_pos_conf)
+                conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf) * 0.3)
+
+                iou_loss = torch.mean(1 - ious[valid_idx])
+
+                target_cls = int(t_xyxy[-1].item())
+                target_cls_onehot = torch.zeros((valid_p.shape[0], self.nc))
+                target_cls_onehot[:, target_cls - 1] = 1.
+                pred_cls = torch.softmax(valid_p[:, 5:], -1)
+                cls_loss = self.BCEcls(pred_cls, target_cls_onehot)
+
+                loss = self.lw["iou"] * iou_loss + \
+                    self.lw["conf"] * conf_loss + \
+                    self.lw["cls"] * cls_loss
+                loss_per_img += loss
+            loss_per_img /= len(t_xyxys)
+            total_loss += loss_per_img
+        total_loss /= len(p)
+        return total_loss
