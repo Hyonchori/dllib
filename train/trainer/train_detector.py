@@ -22,8 +22,9 @@ def main(opt):
                           detector_head_cfg=opt.head_cfg,
                           info=True).cuda()
     if opt.weights is not None:
-        wts = torch.load(opt.weights)
-        model.load_state_dict(wts)
+        if os.path.isfile(opt.weights):
+            wts = torch.load(opt.weights)
+            model.load_state_dict(wts)
     device = next(model.parameters()).device
 
     train_transform = A.Compose([
@@ -49,11 +50,12 @@ def main(opt):
     best_loss = 100.
     save_interval = opt.save_interval
 
-    epochs = opt.epochs
-    for e in range(epochs):
+    start_epoch = opt.start_epoch
+    end_epoch = opt.end_epoch
+    for e in range(start_epoch, end_epoch+1):
         print("\n--- {}".format(e))
         time.sleep(0.5)
-        train_loss = train(model, optimizer, e, valid_dataloader, compute_loss, loss_weight, device)
+        train_loss = train(model, optimizer, e, train_dataloader, compute_loss, loss_weight, device)
         time.sleep(0.5)
         print(train_loss)
 
@@ -157,8 +159,9 @@ def parse_opt(known=False):
                         default="../../models/cfgs/base_detection_head_m.yaml")
     parser.add_argument("--weights", type=str, help="initial weights path",
                         default="../../weights/base_detector.pt")
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=18)
+    parser.add_argument("--start_epoch", type=int, default=0)
+    parser.add_argument("--end_epoch", type=int, default=50)
+    parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--img_size", type=int, default=412)
     parser.add_argument("--save_dir", type=str, default="../../weights")
     parser.add_argument("--name", type=str, default="base_detector")
