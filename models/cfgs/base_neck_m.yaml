@@ -13,21 +13,25 @@ architecture:
     [Upsample, [None, 2, "nearest", -1]],
     [ConcatLayer, [1, [-1, -4]]],
     [BottleneckCSP, [512, 512, 3, 0.5, False, False]],
+    [LSDropBlock, [5, 30]],
 
     [ConvBnAct, [512, 128]],
     [Upsample, [None, 2, "nearest", -1]],
-    [ConcatLayer, [1, [-1, -9]]],
+    [ConcatLayer, [1, [-1, -10]]],
     [BottleneckCSP, [256, 256, 3, 0.5, False, False]],
+    [LSDropBlock, [5, 30]],
 
     [ConvBnAct, [256, 256, 3, 2]],
-    [ConcatLayer, [1, [-1, -6]]],
+    [ConcatLayer, [1, [-1, -8]]],
     [BottleneckCSP, [768, 512, 3, 0.5, False, False]],
+    [LSDropBlock, [5, 30]],
 
     [ConvBnAct, [512, 512, 3, 2]],
-    [ConcatLayer, [1, [-1, -12]]],
-    [BottleneckCSP, [768, 1024, 3, 0.5, False, False]]
+    [ConcatLayer, [1, [-1, -15]]],
+    [BottleneckCSP, [768, 1024, 3, 0.5, False, False]],
+    [LSDropBlock, [5, 30]]
   ]
 
 output_layers:
   # please input layer_idx
-  [-1, -4, -7]
+  [-1, -6, -9]

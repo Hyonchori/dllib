@@ -37,24 +37,23 @@ class FocalLoss(nn.Module):
 
 
 class ComputeDetectionLoss:
-    def __init__(self, model, iou_thr=0.4, loss_weight={"iou": 0.5, "conf": 0.3, "cls": 0.2}):
+    def __init__(self, model, iou_thr=0.4):
         self.device = next(model.parameters()).device
 
         self.BCEcls = FocalLoss(nn.BCEWithLogitsLoss())
         self.BCEobj = FocalLoss(nn.BCEWithLogitsLoss())
         self.iou_thr = iou_thr
-        self.lw = loss_weight
         self.nc = model.head.nc
 
     def __call__(self, pred, targets, epoch=None):
         # pred: (bs, total_predicted_bbox_num, 4 + 1 + cls_num)
         # target: (bs, total_target_bbox_num, 4 + 1 + cls)
-        total_loss = torch.zeros(1, device=self.device)
+        total_loss = torch.zeros(3, device=self.device)
         for p, t in zip(pred, targets):
             p_xyxys = cpwh2xyxy(p)
             t_xyxys = xywh2xyxy(t)
 
-            loss_per_img = torch.zeros(1, device=self.device)
+            loss_per_img = torch.zeros(3, device=self.device)
             n = 1
             for t_xyxy in t_xyxys:
                 ious = bbox_iou(p_xyxys, t_xyxy)
@@ -82,10 +81,11 @@ class ComputeDetectionLoss:
                 pred_cls = torch.softmax(valid_p[:, 5:], -1)
                 cls_loss = self.BCEcls(pred_cls, target_cls_onehot)
 
-                loss = self.lw["iou"] * iou_loss + \
-                    self.lw["conf"] * conf_loss + \
-                    self.lw["cls"] * cls_loss
-                loss_per_img += loss
+                loss_per_img[0] += iou_loss
+                loss_per_img[1] += conf_loss
+                loss_per_img[2] += cls_loss
+
+                #loss_per_img += loss
             loss_per_img /= n
             total_loss += loss_per_img
         total_loss /= len(pred)
