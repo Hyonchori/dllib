@@ -26,3 +26,12 @@ def model_info(model, verbose=False, input_shape=(3, 640, 640), batch_size=32):
     fs = ", {:.1f} GFLOPs given size{}".format(flops * batch_size, size)
 
     print(f"Model Summary: {len(list(model.modules()))} layers, {n_p} parameters, {n_g} gradients{fs}\n")
+    if model.mode in ["backbone", "detector"]:
+        in_dim = img.shape[2:4]
+        pred = model(img.float())
+        strides = []
+        for p in pred:
+            out_dim = p.shape[2:4]
+            stride = round(max(in_dim[0] / out_dim[0], in_dim[1] / out_dim[1]))
+            strides.append(stride)
+        return max(strides)

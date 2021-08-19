@@ -192,13 +192,20 @@ class COCODataset(torch.utils.data.Dataset):
         return img0, torch.cat(img_b), bboxes0, bbox_b, keypoints0, keypoint_b, img_name
 
 
-data_root = "/media/jhc/4AD250EDD250DEAF/dataset/coco"
-train_root = os.path.join(data_root, "train2017")
-valid_root = os.path.join(data_root, "val2017")
+data_root = "/media/daton/D6A88B27A88B0569/dataset/coco"
+train_root = os.path.join(data_root, "train2017", "train2017")
+valid_root = os.path.join(data_root, "val2017", "val2017")
 annot_root = os.path.join(data_root, "annotations_trainval2017", "annotations")
 label_file = os.path.join(data_root, "coco_labels91.txt")
 #keypoint_label_file = os.path.join(data_root, "coco_keypoint_labels.txt")
 keypoint_label_file = None
+train_transform = AT.Compose([
+    AT.ColorJitter(),
+    AT.HueSaturationValue(),
+    AT.RandomBrightnessContrast(),
+    AT.Normalize(),
+    AT.Cutout(max_h_size=16, max_w_size=16)
+])
 
 
 def get_coco2017_valid_dataloader(img_size: (int, int),
@@ -266,7 +273,8 @@ if __name__ == "__main__":
 
     dataset = COCODataset(valid_root, annot_root,
                           labels=label_file, keypoint_labels=keypoint_label_file,
-                          target_cls="person", mode="keypoint")
+                          target_cls="person", mode="keypoint",
+                          transform=train_transform)
     labels = dataset.labels
     '''
     dataloader = torch.utils.data.DataLoader(
@@ -307,7 +315,7 @@ if __name__ == "__main__":
         for kp in keypoints0:
             plot_one_keypoint(kp, img0)
 
-        '''img_lt = np.ascontiguousarray(img[0].numpy().transpose(1, 2, 0))
+        '''
         for *xywh, conf, cls in bboxes:
             xyxy = xywh2xyxy(torch.tensor(xywh).view(1, 4)).view(-1)
             c = int(cls)
@@ -318,5 +326,5 @@ if __name__ == "__main__":
             plot_one_keypoint(kp, img_lt)'''
 
         cv2.imshow("img0", img0)
-        #cv2.imshow("img", img_lt)
+        cv2.imshow("img", img)
         cv2.waitKey(0)

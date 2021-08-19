@@ -122,6 +122,7 @@ def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, m
         if not x.shape[0]:
             continue
 
+        x[:, 5:] = torch.softmax(x[:, 5:], -1)
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         box = cpwh2xyxy(x[:, :4])
@@ -153,7 +154,6 @@ def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, m
             x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)
             if redundant:
                 i = i[iou,sum(1) > 1]
-
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
             print(f"WARNING: NMS time limit {time_limit}s exceeded")

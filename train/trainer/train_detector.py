@@ -33,9 +33,9 @@ def main(opt):
         A.RandomBrightnessContrast(),
     ])
     train_dataloader, valid_dataloader = get_coco2017dataloader(img_size=opt.img_size,
-                                                               mode="detection",
-                                                               train_batch=opt.batch_size,
-                                                               train_transform=train_transform)
+                                                                mode="detection",
+                                                                train_batch=opt.batch_size,
+                                                                train_transform=train_transform)
     compute_loss = ComputeDetectionLoss(model)
     optimizer = optim.Adam(model.parameters(), lr=0.00005)
     lr_sch = CosineAnnealingWarmUpRestarts(optimizer, T_0=10, T_mult=1, eta_max=0.001, T_up=3, gamma=0.7)
@@ -96,7 +96,7 @@ def train(model, optimizer, epoch, dataloader, compute_loss, loss_weight, device
     pbar = enumerate(dataloader)
     pbar = tqdm(pbar, total=nb)
     for i, (img0, img_b, bboxes0, bbox_b, img_name) in pbar:
-        img_b = img_b.to(device)
+        img_b = img_b.to(device) / 255.
         for i, bbox in enumerate(bbox_b):
             bbox_b[i] = bbox_b[i].to(device)
         optimizer.zero_grad()
@@ -130,7 +130,7 @@ def evaluate(model, epoch, dataloader, compute_loss, device):
     pbar = enumerate(dataloader)
     pbar = tqdm(pbar, total=nb)
     for i, (img0, img_b, bboxes0, bbox_b, img_name) in pbar:
-        img_b = img_b.to(device)
+        img_b = img_b.to(device) / 255.
         for i, bbox in enumerate(bbox_b):
             bbox_b[i] = bbox_b[i].to(device)
         pred = model(img_b.float(), epoch)

@@ -28,10 +28,10 @@ class BuildBackbone(nn.Module):
             self.output_layers = [x for x in self.yaml["output_layers"] if x < 0]
 
         if info:
-            self.info(verbose=False)
+            self.stride = self.info(verbose=False)
 
     def info(self, verbose=False, batch_size=1):
-        model_info(self, verbose, self.input_shape, batch_size)
+        return model_info(self, verbose, self.input_shape, batch_size)
 
     def forward(self, x, epoch=None):
         output = []

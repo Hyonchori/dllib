@@ -22,10 +22,10 @@ class BuildDetector(nn.Module):
         self.mode = "detector"
         self.input_shape = self.backbone.input_shape
         if info:
-            self.info(verbose=False)
+            self.stride = self.info(verbose=False)
 
     def info(self, verbose=False, batch_size=1):
-        model_info(self, verbose, self.input_shape, batch_size)
+        return model_info(self, verbose, self.input_shape, batch_size)
 
     def forward(self, x, epoch=None):
         x = self.backbone(x, epoch)
