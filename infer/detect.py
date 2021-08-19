@@ -21,6 +21,8 @@ def main(opt):
                           neck_cfg=opt.neck_cfg,
                           detector_head_cfg=opt.head_cfg,
                           info=True).cuda().eval()
+    if opt.half:
+        model = model.half()
     stride = model.stride
     if opt.weights is not None:
         if os.path.isfile(opt.weights):
@@ -49,7 +51,8 @@ def main(opt):
             labels = {i: data[i - 1][:-1] for i in range(1, len(data) + 1)}
 
     for img0, img, path in dataset:
-        img_in = img.to(device).float() / 255.
+        img_in = img.to(device).float() if not opt.half else img.to(device).half()
+        img_in /= 255.
 
         pred = model(img_in)
         for i in range(len(pred)):
@@ -71,8 +74,6 @@ def main(opt):
             cv2.waitKey(1)
 
 
-
-
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--backbone_cfg", type=str, help="backbone.yaml path",
@@ -88,6 +89,7 @@ def parse_opt(known=False):
     parser.add_argument("--target_cls", type=int, default=0)
     parser.add_argument("--conf_thr", type=float, default=0.25)
     parser.add_argument("--iou_thr", type=float, default=0.4)
+    parser.add_argument("--half", action="store_true", help='use FP16 half-precision inference')
     parser.add_argument("--save_dir", type=str, default="../runs")
     parser.add_argument("--name", type=str, default="base_detector")
     opt = parser.parse_known_args()[0] if known else parser.parse_args()

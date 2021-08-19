@@ -160,8 +160,8 @@ def parse_opt(known=False):
     parser.add_argument("--weights", type=str, help="initial weights path",
                         default="../../weights/base_detector.pt")
     parser.add_argument("--start_epoch", type=int, default=0)
-    parser.add_argument("--end_epoch", type=int, default=50)
-    parser.add_argument("--batch_size", type=int, default=24)
+    parser.add_argument("--end_epoch", type=int, default=15)
+    parser.add_argument("--batch_size", type=int, default=18)
     parser.add_argument("--img_size", type=int, default=412)
     parser.add_argument("--save_dir", type=str, default="../../weights")
     parser.add_argument("--name", type=str, default="base_detector")
