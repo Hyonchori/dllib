@@ -11,6 +11,8 @@ import torch.backends.cudnn as cudnn
 
 from dllib.models.detector import BuildDetector
 from dllib.data.for_infer.from_streams import LoadStreams
+from dllib.data.for_infer.from_images import LoadImages, img_formats
+from dllib.data.for_infer.from_videos import LoadVideo, vid_formats
 from dllib.utils.bbox_utils import non_maximum_suppression
 from dllib.utils.img_utils import colors, plot_one_box
 
@@ -36,9 +38,14 @@ def main(opt):
     if webcam:
         cudnn.benchmark = True
         dataset = LoadStreams(opt.source, opt.img_size, stride)
-        bs = len(dataset)
     else:
-        pass
+        files = os.listdir(opt.source)
+        img_files = [x for x in files if x.split(".")[-1] in img_formats]
+        vid_files = [x for x in files if x.split(".")[-1] in vid_formats]
+        if img_files:
+            dataset = LoadImages(opt.source, opt.img_size, stride)
+        elif vid_files:
+            dataset = LoadVideo(opt.source, opt.img_size, stride)
 
     if device.type != "cpu":
         sample = torch.zeros(1, 3, opt.img_size, opt.img_size).to(device).type_as(next(model.parameters()))
@@ -51,6 +58,7 @@ def main(opt):
             labels = {i: data[i - 1][:-1] for i in range(1, len(data) + 1)}
 
     for img0, img, path in dataset:
+        img0 = img0 if webcam else [img0]
         img_in = img.to(device).float() if not opt.half else img.to(device).half()
         img_in /= 255.
 
@@ -63,11 +71,12 @@ def main(opt):
         pred = non_maximum_suppression(pred, conf_thr=opt.conf_thr, iou_thr=opt.iou_thr, target_cls=opt.target_cls)
         for i, (det) in enumerate(pred):
             im0 = np.ascontiguousarray(img[i].numpy().transpose(1, 2, 0))
+            im0 = cv2.cvtColor(im0, cv2.COLOR_RGB2BGR)
             if len(det):
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls) + 1
-                    label = labels[c] if labels is not None else None
-                    plot_one_box(xyxy, im0, c, label)
+                    label = f"{labels[c]} {conf}" if labels is not None else None
+                    plot_one_box(xyxy, im0, colors(c, True), label)
 
             cv2.imshow("img0", img0[i])
             cv2.imshow(f'im{i}', im0)
@@ -82,13 +91,17 @@ def parse_opt(known=False):
                         default="../models/cfgs/base_neck_m.yaml")
     parser.add_argument("--head_cfg", type=str, help="backbone.yaml path",
                         default="../models/cfgs/base_detection_head_m.yaml")
-    parser.add_argument("--weights", type=str, help="initial weights path")
+    parser.add_argument("--weights", type=str, help="initial weights path",
+                        default="../weights/base_detector.pt")
     parser.add_argument("--img_size", type=int, default=412)
-    parser.add_argument("--source", type=str, default="0")
+
+    source = "/media/daton/D6A88B27A88B0569/dataset/mot/MOT17/test/MOT17-01-DPM/img1"
+    source = "/home/daton/PycharmProjects/pythonProject/datonlib/videos"
+    parser.add_argument("--source", type=str, default=source)
     parser.add_argument("--labels", type=str, default="../data/for_train/coco_labels91.txt")
     parser.add_argument("--target_cls", type=int, default=0)
-    parser.add_argument("--conf_thr", type=float, default=0.25)
-    parser.add_argument("--iou_thr", type=float, default=0.4)
+    parser.add_argument("--conf_thr", type=float, default=0.45)
+    parser.add_argument("--iou_thr", type=float, default=0.15)
     parser.add_argument("--half", action="store_true", help='use FP16 half-precision inference')
     parser.add_argument("--save_dir", type=str, default="../runs")
     parser.add_argument("--name", type=str, default="base_detector")
