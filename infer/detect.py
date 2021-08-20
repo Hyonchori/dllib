@@ -1,12 +1,10 @@
 
 import argparse
 import os
-import time
 import cv2
 import numpy as np
 
 import torch
-import torchvision
 import torch.backends.cudnn as cudnn
 
 from dllib.models.detector import BuildDetector
