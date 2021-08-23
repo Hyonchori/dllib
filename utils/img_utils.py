@@ -46,7 +46,8 @@ def letterbox(img,
     new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
     dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
     if auto:
-        dw, dh = np.mod(dw, stride), np.mod(dh, stride)
+        dw = stride - np.mod(new_unpad[0], stride) if np.mod(new_unpad[0], stride) != 0 else 0
+        dh = stride - np.mod(new_unpad[1], stride) if np.mod(new_unpad[1], stride) != 0 else 0
     elif scaleFill:
         dw, dh = 0.0, 0.0
         new_unpad = (new_shape[1], new_shape[0])

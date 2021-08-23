@@ -35,15 +35,15 @@ def main(opt):
     )
     if webcam:
         cudnn.benchmark = True
-        dataset = LoadStreams(opt.source, opt.img_size, stride)
+        dataset = LoadStreams(opt.source, opt.img_size, stride, auto=opt.auto)
     else:
         files = os.listdir(opt.source)
         img_files = [x for x in files if x.split(".")[-1] in img_formats]
         vid_files = [x for x in files if x.split(".")[-1] in vid_formats]
         if img_files:
-            dataset = LoadImages(opt.source, opt.img_size, stride)
+            dataset = LoadImages(opt.source, opt.img_size, stride, auto=opt.auto)
         elif vid_files:
-            dataset = LoadVideo(opt.source, opt.img_size, stride)
+            dataset = LoadVideo(opt.source, opt.img_size, stride, auto=opt.auto)
 
     if device.type != "cpu":
         sample = torch.zeros(1, 3, opt.img_size, opt.img_size).to(device).type_as(next(model.parameters()))
@@ -59,21 +59,24 @@ def main(opt):
         img0 = img0 if webcam else [img0]
         img_in = img.to(device).float() if not opt.half else img.to(device).half()
         img_in /= 255.
+        print(img_in.shape, img0[0].shape)
 
         pred = model(img_in)
         for i in range(len(pred)):
-            bs, _, _, _, info = pred[i].shape
+            print(pred[i].shape)
+            bs, _, _, info = pred[i].shape
             pred[i] = pred[i].view(bs, -1, info)
         pred = torch.cat(pred, 1)
 
         pred = non_maximum_suppression(pred, conf_thr=opt.conf_thr, iou_thr=opt.iou_thr, target_cls=opt.target_cls)
+
         for i, (det) in enumerate(pred):
             im0 = np.ascontiguousarray(img[i].numpy().transpose(1, 2, 0))
             im0 = cv2.cvtColor(im0, cv2.COLOR_RGB2BGR)
             if len(det):
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls) + 1
-                    label = f"{labels[c]} {conf}" if labels is not None else None
+                    label = "{} {:.2f}".format(labels[c], conf) if labels is not None else None
                     plot_one_box(xyxy, im0, colors(c, True), label)
 
             cv2.imshow("img0", img0[i])
@@ -88,18 +91,19 @@ def parse_opt(known=False):
     parser.add_argument("--neck_cfg", type=str, help="backbone.yaml path",
                         default="../models/cfgs/base_neck_m.yaml")
     parser.add_argument("--head_cfg", type=str, help="backbone.yaml path",
-                        default="../models/cfgs/base_detection_head_m.yaml")
+                        default="../models/cfgs/base_detection_head2.yaml")
     parser.add_argument("--weights", type=str, help="initial weights path",
-                        default="../weights/base_detector.pt")
-    parser.add_argument("--img_size", type=int, default=412)
+                        default="../weights/base_detetor.pt")
+    parser.add_argument("--img_size", type=int, default=640)
 
     source = "/media/daton/D6A88B27A88B0569/dataset/mot/MOT17/test/MOT17-01-DPM/img1"
     source = "/home/daton/PycharmProjects/pythonProject/datonlib/videos"
     parser.add_argument("--source", type=str, default=source)
+    parser.add_argument("--auto", type=bool, default=True)
     parser.add_argument("--labels", type=str, default="../data/for_train/coco_labels91.txt")
-    parser.add_argument("--target_cls", type=int, default=0)
-    parser.add_argument("--conf_thr", type=float, default=0.45)
-    parser.add_argument("--iou_thr", type=float, default=0.15)
+    parser.add_argument("--target_cls", type=int, default=None)
+    parser.add_argument("--conf_thr", type=float, default=0.5)
+    parser.add_argument("--iou_thr", type=float, default=0.05)
     parser.add_argument("--half", action="store_true", help='use FP16 half-precision inference')
     parser.add_argument("--save_dir", type=str, default="../runs")
     parser.add_argument("--name", type=str, default="base_detector")

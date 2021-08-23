@@ -19,7 +19,7 @@ def model_info(model, verbose=False, input_shape=(3, 640, 640), batch_size=32):
         img = torch.zeros((1, *input_shape), device=next(model.parameters()).device)
         size = (batch_size, *img.shape[1:])
 
-    elif model.mode in ["neck", "head"]:
+    elif model.mode in ["neck"] or "head" in model.mode:
         img = [torch.zeros((1, *shape), device=next(model.parameters()).device) for shape in input_shape]
         size = [(batch_size, *im.shape[1:]) for im in img]
     flops = profile(copy.deepcopy(model), inputs=(img,), verbose=False)[0] / 1E9 * 2

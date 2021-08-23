@@ -91,7 +91,7 @@ def unnormalize_keypoint(x, w, h):
     return y
 
 
-def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, multi_label=False,
+def non_maximum_suppression(pred, conf_thr=0.2, iou_thr=0.45, target_cls=None, multi_label=False,
                             agnostic=False, labels=(), max_det=300):
     # Checks
     assert 0 <= conf_thr <= 1, f'Invalid Confidence threshold {conf_thr}, valid values are between 0.0 and 1.0'
@@ -122,7 +122,7 @@ def non_maximum_suppression(pred, conf_thr=0.4, iou_thr=0.45, target_cls=None, m
         if not x.shape[0]:
             continue
 
-        x[:, 5:] = torch.softmax(x[:, 5:], -1)
+        #x[:, 5:] = torch.softmax(x[:, 5:], -1)
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         box = cpwh2xyxy(x[:, :4])

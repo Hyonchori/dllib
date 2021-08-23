@@ -12,11 +12,12 @@ from dllib.utils.img_utils import letterbox
 
 
 class LoadStreams:
-    def __init__(self, sources="streams.txt", img_size=640, stride=32, frame_latency=1):
+    def __init__(self, sources="streams.txt", img_size=640, stride=32, frame_latency=1, auto=True):
         self.mode = "stream"
         self.img_size = img_size
         self.stride = stride
         self.frame_latency = frame_latency
+        self.auto = auto
 
         if os.path.isfile(sources):
             with open(sources, "r") as f:
@@ -43,7 +44,7 @@ class LoadStreams:
             self.threads[i].start()
         print("")
 
-        s = np.stack([letterbox(x, self.img_size, stride=self.stride)[0].shape for x in self.imgs], 0)
+        s = np.stack([letterbox(x, self.img_size, stride=self.stride, auto=self.auto)[0].shape for x in self.imgs], 0)
         self.rect = np.unique(s, axis=0).shape[0] == 1
         if not self.rect:
             print("WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.")
@@ -69,7 +70,7 @@ class LoadStreams:
             raise StopIteration
 
         imgs0 = self.imgs.copy()
-        imgs = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in imgs0]
+        imgs = [letterbox(x, self.img_size, auto=self.auto, stride=self.stride)[0] for x in imgs0]
         imgs = np.stack(imgs, 0)
         imgs = imgs[..., ::-1].transpose((0, 3, 1, 2))
         imgs = np.ascontiguousarray(imgs)

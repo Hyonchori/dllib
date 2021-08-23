@@ -4,7 +4,8 @@ import torch.nn as nn
 
 from dllib.models.builder.backbone import BuildBackbone
 from dllib.models.builder.neck import BuildNeck
-from dllib.models.builder.detection_head import BuildDetectionHead
+#from dllib.models.builder.detection_head import BuildDetectionHead
+from dllib.models.builder.detection_head_separate import BuildDetectionHead
 from dllib.utils.model_utils import model_info
 
 
@@ -15,14 +16,15 @@ class BuildDetector(nn.Module):
                  detector_head_cfg,
                  info=False):
         super().__init__()
-        self.backbone = BuildBackbone(backbone_cfg)
-        self.neck = BuildNeck(neck_cfg)
-        self.head = BuildDetectionHead(detector_head_cfg)
+        self.backbone = BuildBackbone(backbone_cfg, True)
+        self.neck = BuildNeck(neck_cfg, True)
+        self.head = BuildDetectionHead(detector_head_cfg, True)
 
         self.mode = "detector"
         self.input_shape = self.backbone.input_shape
         if info:
-            self.stride = self.info(verbose=False)
+            self.stride = self.backbone.stride
+            self.info(verbose=False)
 
     def info(self, verbose=False, batch_size=1):
         return model_info(self, verbose, self.input_shape, batch_size)
@@ -37,13 +39,13 @@ class BuildDetector(nn.Module):
 if __name__ == "__main__":
     bb_cfg = "cfgs/base_backbone_m.yaml"
     n_cfg = "cfgs/base_neck_m.yaml"
-    h_cfg = "cfgs/base_detection_head_m.yaml"
+    h_cfg = "cfgs/base_detection_head2.yaml"
     model = BuildDetector(bb_cfg,
                           n_cfg,
                           h_cfg,
                           True)
     bs = 1
-    sample = torch.randn(bs, 3, 412, 412)
+    sample = torch.randn(bs, 3, 416, 416)
     pred = model(sample, epoch=20)
     for p in pred:
         print(p.size())

@@ -13,7 +13,7 @@ img_formats = ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff', 'dng', 'webp', 'mpo']
 
 
 class LoadImages:
-    def __init__(self, path, img_size=640, stride=32):
+    def __init__(self, path, img_size=640, stride=32, auto=True):
         p = str(Path(path).absolute())
         if "*" in p:
             files = sorted(glob.glob(p, recursive=True))
@@ -29,6 +29,7 @@ class LoadImages:
 
         self.img_size = img_size
         self.stride = stride
+        self.auto = auto
         self.files = files
         self.nf = ni
         self.mode = "image"
@@ -49,7 +50,7 @@ class LoadImages:
         assert img0 is not None, "Image Not Found " + path
         print(f"image {self.count}/{self.nf} {path}")
 
-        img = letterbox(img0, self.img_size, stride=self.stride)[0]
+        img = letterbox(img0, self.img_size, stride=self.stride, auto=self.auto)[0]
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img)
         img = torch.from_numpy(img).unsqueeze(0)

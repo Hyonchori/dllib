@@ -2,7 +2,7 @@
 channel_multiple: 1.0
 
 expected_input_shape:
-  [3, 412, 412]
+  [3, 416, 416]
 
 architecture:
   # [layer_idx, iter, module, args]

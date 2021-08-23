@@ -1,0 +1,49 @@
+
+channel_multiple: 1.0
+
+nc: 91
+# output channel: (nc), (4(bbox) + 1(conf))
+
+strides:
+  # Used with anchors for output bbox
+  [32, 16, 8]
+
+anchors:
+  - [116,90, 156,198, 373,326]  # /32
+  - [30,61, 62,45, 59,119]  # /16
+  - [10,13, 16,30, 33,23]  # /8
+
+expected_input_shape:
+  - [256, 52, 52]
+  - [512, 26, 26]
+  - [1024, 13, 13]
+
+bbox_architecture:
+  # [layer_idx, iter, module, args]
+  [
+    [ PWConv, [ 1024, 256 ] ],
+    [ Upsample, [ None, 4, "nearest", -1 ] ],
+    [ GetLayer, [ -4 ] ],
+    [ PWConv, [ 512, 256 ] ],
+    [ Upsample, [ None, 2, "nearest", -1 ] ],
+    [ ConcatLayer, [ 1, [ -1, -4, -8 ] ] ],
+    [Downsample, [3, -1, 2]],
+    [PWConv, [768, 128]],
+    [BottleneckCSP, [128, 128, 6, 0.5, True, False]],
+    [PWConv, [128, 5]]
+  ]
+
+cls_architecture:
+  # [layer_idx, iter, module, args]
+  [
+    [ PWConv, [ 1024, 256 ] ],
+    [ Upsample, [ None, 4, "nearest", -1 ] ],
+    [ GetLayer, [ -4 ] ],
+    [ PWConv, [ 512, 256 ] ],
+    [ Upsample, [ None, 2, "nearest", -1 ] ],
+    [ ConcatLayer, [ 1, [ -1, -4, -8 ] ] ],
+    [ Downsample, [ 3, -1, 2 ] ],
+    [ PWConv, [ 768, 128 ] ],
+    [ BottleneckCSP, [ 128, 128, 6, 0.5, True, False ] ],
+    [ PWConv, [ 128, 91 ] ]
+  ]

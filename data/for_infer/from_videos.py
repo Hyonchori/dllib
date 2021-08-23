@@ -13,7 +13,7 @@ vid_formats = ['mov', 'avi', 'mp4', 'mpg', 'mpeg', 'm4v', 'wmv', 'mkv']  # accep
 
 
 class LoadVideo:
-    def __init__(self, path, img_size=640, stride=32):
+    def __init__(self, path, img_size=640, stride=32, auto=True):
         p = str(Path(path).absolute())
         if "*" in p:
             files = sorted(glob.glob(p, recursive=True))
@@ -29,6 +29,7 @@ class LoadVideo:
 
         self.img_size = img_size
         self.stride = stride
+        self.auto = auto
         self.files = files
         self.nf = nv
         self.mode = "video"
@@ -66,7 +67,7 @@ class LoadVideo:
         self.frame += 1
         print(f"video {self.count + 1}/{self.nf} ({self.frame}/{self.nframes}) {path}")
 
-        img = letterbox(img0, self.img_size, stride=self.stride)[0]
+        img = letterbox(img0, self.img_size, stride=self.stride, auto=self.auto)[0]
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img)
         img = torch.from_numpy(img).unsqueeze(0)

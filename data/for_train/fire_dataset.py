@@ -16,4 +16,4 @@ class FireDataset(torch.utils.Dataset):
 
 
 if __name__ == "__main__":
-    root =
+    root = 1
