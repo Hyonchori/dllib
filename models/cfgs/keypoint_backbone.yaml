@@ -1,0 +1,29 @@
+
+channel_multiple: 1.0
+
+expected_input_shape:
+  [3, 128, 128]
+
+architecture:
+  # [module, args]
+  [
+    [FusedBottleneck, [3, 64, 3, 2, True, False]],
+    [BottleneckCSP, [64, 64, 2, 0.5, True, True]],
+    [LSDropBlock, [5, 30]],
+
+    [FusedBottleneck, [64, 128, 3, 2, True, True]],
+    [BottleneckCSP, [128, 128]],
+    [LSDropBlock, [5, 30]],
+
+    [Bottleneck, [128, 256, 3, 2, True, True]],
+    [BottleneckCSP, [256, 256]],
+    [LSDropBlock, [3, 30]],
+
+    [Bottleneck, [256, 512, 3, 2, True, True]],
+    [BottleneckCSP, [512, 512]],
+    [LSDropBlock, [2, 30]]
+  ]
+
+output_layers:
+  # input layer idx
+  [-1, -4, -7]

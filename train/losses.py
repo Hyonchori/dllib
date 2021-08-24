@@ -78,7 +78,7 @@ class ComputeDetectionLoss:
                 target_cls = int(t_xyxy[-1].item())
                 target_cls_onehot = torch.zeros((valid_p.shape[0], self.nc), device=self.device)
                 target_cls_onehot[:, target_cls - 1] = 1.
-                pred_cls = torch.softmax(valid_p[:, 5:], -1)
+                pred_cls = valid_p[:, 5:]
                 cls_loss = self.BCEcls(pred_cls, target_cls_onehot)
 
                 loss_per_img[0] += iou_loss

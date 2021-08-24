@@ -7,7 +7,7 @@ expected_input_shape:
   - [512, 13, 13]
 
 architecture:
-  # [layer_idx, iter, module, args]
+  # [module, args]
   [
     [PWConv, [512, 256]],
     [Upsample, [None, 2, "nearest", -1]],
@@ -33,5 +33,5 @@ architecture:
   ]
 
 output_layers:
-  # please input layer_idx
+  # input layer_idx
   [-1, -6, -9]

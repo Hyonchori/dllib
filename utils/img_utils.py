@@ -93,3 +93,44 @@ def plot_one_keypoint(kp: torch.tensor,
     for x, y, v in zip(xs, ys, vs):
         if v > 0:
             cv2.circle(im, (int(x), int(y)), radius, color, -1)
+
+
+def crop_bbox(img: np.ndarray,
+              bboxes: list,
+              keypoints: list,
+              letterbox_size: (int, int)=None,
+              normalize: bool=True):
+    if isinstance(letterbox_size, int):
+        letterbox_size = (letterbox_size, letterbox_size)
+
+    imgs = []
+    adj_keypoints = []
+    for bbox, keypoint in zip(bboxes, keypoints):
+        if sum(keypoint) == 0:
+            continue
+
+        xs = keypoint[0::3]
+        ys = keypoint[1::3]
+        vs = keypoint[2::3]
+        adj_keypoint = []
+
+        bbox = list(map(int, bbox))
+        cropped_img = img[bbox[1]: bbox[3], bbox[0]: bbox[2]]
+        if letterbox_size is not None:
+            cropped_img, ratio, (dw, dh) = letterbox(cropped_img, letterbox_size, auto=False)
+            norm = (1, 1) if not normalize else cropped_img.shape[:2]
+            for x, y, v in zip(xs, ys, vs):
+                adj_keypoint += [((x - bbox[0]) * ratio[0] + dw) / norm[0]] \
+                    if x != 0 else [0]
+                adj_keypoint += [((y - bbox[1]) * ratio[1] + dh) / norm[1]] \
+                    if y != 0 else [0]
+                adj_keypoint += [v / 2.]
+        else:
+            norm = (1, 1) if not normalize else cropped_img.shape[:2]
+            for x, y, v in zip(xs, ys, vs):
+                adj_keypoint += [(x - bbox[0]) / norm[0]] if x != 0 else [0]
+                adj_keypoint += [(y - bbox[1]) / norm[1]] if y != 0 else [0]
+                adj_keypoint += [v / 2.]
+        imgs.append(cropped_img)
+        adj_keypoints.append(adj_keypoint)
+    return np.array(imgs), np.array(adj_keypoints)

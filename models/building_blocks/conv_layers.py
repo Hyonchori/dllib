@@ -4,7 +4,7 @@ import torch.nn as nn
 import math
 import warnings
 
-from .attention_layers import SEModule
+from dllib.models.building_blocks.attention_layers import SEModule
 
 
 def autopad(kernel, padding=None):
@@ -198,10 +198,10 @@ class ConvDownSampling(nn.Module):
 if __name__ == "__main__":
     import time
 
-    c_in = 3
-    c_out = 12
+    c_in = 128
+    c_out = 51
     batch_size = 32
-    w, h = 412, 412
+    w, h = 128, 128
     sample = torch.randn(batch_size, c_in, w, h)
 
     t1 = time.time()

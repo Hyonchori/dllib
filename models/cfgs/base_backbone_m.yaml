@@ -5,7 +5,7 @@ expected_input_shape:
   [3, 416, 416]
 
 architecture:
-  # [layer_idx, iter, module, args]
+  # [module, args]
   [
     [Focus, [3, 36]],
     [ConvBnAct, [36, 64, 3, 2]],
@@ -26,5 +26,5 @@ architecture:
   ]
 
 output_layers:
-  # please input layer_idx
+  # input layer_idx
   [-1, -5, -8]

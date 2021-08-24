@@ -31,6 +31,7 @@ def main(opt):
         A.ColorJitter(),
         A.HueSaturationValue(),
         A.RandomBrightnessContrast(),
+        A.Cutout(max_h_size=32, max_w_size=32)
     ])
     train_dataloader, valid_dataloader = get_coco2017dataloader(img_size=opt.img_size,
                                                                 mode="detection",
@@ -40,9 +41,11 @@ def main(opt):
     optimizer = optim.Adam(model.parameters(), lr=0.00005)
     lr_sch = CosineAnnealingWarmUpRestarts(optimizer, T_0=10, T_mult=1, eta_max=0.001, T_up=3, gamma=0.7)
 
-    loss_weight = [0.5, 0.3, 0.2]  # iou, conf, cls
+    loss_weight = [1, 0.5, 1]  # iou, conf, cls
 
     save_dir = opt.save_dir
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
     model_name = opt.name
     wts_save_dir = os.path.join(save_dir, model_name + ".pt")
     log_save_dir = os.path.join(save_dir, model_name + "_log.csv")
@@ -156,7 +159,7 @@ def parse_opt(known=False):
     parser.add_argument("--neck_cfg", type=str, help="backbone.yaml path",
                         default="../../models/cfgs/base_neck_m.yaml")
     parser.add_argument("--head_cfg", type=str, help="backbone.yaml path",
-                        default="../../models/cfgs/base_detection_head_m.yaml")
+                        default="../../models/cfgs/base_detection_head2.yaml")
     parser.add_argument("--weights", type=str, help="initial weights path",
                         default="../../weights/base_detector.pt")
     parser.add_argument("--start_epoch", type=int, default=0)

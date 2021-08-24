@@ -6,11 +6,11 @@ import numpy as np
 from PIL import Image
 import albumentations as AT
 
-from dllib.utils.img_utils import colors, letterbox, plot_one_box, plot_one_keypoint
+from dllib.utils.img_utils import colors, letterbox, plot_one_box, plot_one_keypoint, crop_bbox
 from dllib.utils.bbox_utils import xywh2xyxy, letterboxed_xywh, letterboxed_keypoint, \
-                                normalize_xyxy, normalize_keypoint, xywh2cpwh
+                                normalize_xyxy, normalize_keypoint, xywh2cpwh, unnormalize_keypoint
 
-
+max_keypoint_det = 90
 class COCODataset(torch.utils.data.Dataset):
     def __init__(self,
                  img_root: str,
@@ -35,15 +35,16 @@ class COCODataset(torch.utils.data.Dataset):
         elif "val" in img_dir:
             target_trainval = "val"
 
-        if mode not in ["detection", "semantice_seg", "instance_seq", "keypoint"]:
-            raise Exception(f"'mode' should be selected between ['detection', 'semantic_seg', 'instance_seg', 'keypoint']")
+        if mode not in ["detection", "semantice_seg", "instance_seq", "keypoint", "only keypoint"]:
+            raise Exception(f"'mode' should be selected between \
+            ['detection', 'semantic_seg', 'instance_seg', 'keypoint', 'only keypoint']")
         self.mode = mode
 
         target_annot = None
         if target_trainval is not None:
             if mode == "detection" or "seg" in mode:
                 target_annot = os.path.join(annot_root, "instances_{}{}.json".format(target_trainval, year))
-            elif mode == "keypoint":
+            elif "keypoint" in mode:
                 target_annot = os.path.join(annot_root, "person_keypoints_{}{}.json".format(target_trainval, year))
 
         if os.path.isfile(target_annot):
@@ -56,7 +57,10 @@ class COCODataset(torch.utils.data.Dataset):
         self.transform = transform
         self.img_root = img_root
         self.annot_root = annot_root
-        self.img_size = img_size
+        if self.mode == "only keypoint":
+            self.crop_img_size = img_size
+        else:
+            self.img_size = img_size
         self.stride = stride
 
         self.labels = None
@@ -71,7 +75,8 @@ class COCODataset(torch.utils.data.Dataset):
                 self.keypoint_labels = {i: data[i - 1][:-1] for i in range(1, len(data)+1)}
 
         self.collate_fns = {"detection": self.detection_collate_fn,
-                            "keypoint": self.keypoint_collate_fn}
+                            "keypoint": self.keypoint_collate_fn,
+                            "only keypoint": self.only_keypoint_collate_fn}
 
     def __len__(self):
         return len(self.img_ids)
@@ -83,7 +88,7 @@ class COCODataset(torch.utils.data.Dataset):
             return self.get_semantic_seg_item(idx)
         elif self.mode == "instance_seg":
             return self.get_instance_seg_item(idx)
-        elif self.mode == "keypoint":
+        elif "keypoint" in self.mode:
             return self.get_keypoint_item(idx)
         else:
             raise Exception(f"'{self.mode}' is invalid mode!")
@@ -164,12 +169,13 @@ class COCODataset(torch.utils.data.Dataset):
         img0, img, bboxes0, bboxes, img_name = zip(*batch)
         img_b, bbox_b = [], []
         for im, bbox in zip(img, bboxes):
+            if len(bbox[0]) == 0:
+                continue
             im, ratio, (dw, dh) = letterbox(im, self.img_size, auto=False, stride=self.stride)
             im = im[:, :, ::-1].transpose(2, 0, 1)
             im = np.ascontiguousarray(im)
             im = torch.from_numpy(im).unsqueeze(0)
-            if len(bbox[0]) == 0:
-                continue
+
             bbox = letterboxed_xywh(bbox, ratio, dw, dh)
             img_b.append(im)
             bbox_b.append(bbox)
@@ -179,6 +185,8 @@ class COCODataset(torch.utils.data.Dataset):
         img0, img, bboxes0, bboxes, keypoints0, keypoints, img_name = zip(*batch)
         img_b, bbox_b, keypoint_b = [], [], []
         for im, bbox, keypoint in zip(img, bboxes, keypoints):
+            if sum(keypoint[0]) == 0:
+                continue
             im, ratio, (dw, dh) = letterbox(im, self.img_size, auto=False, stride=self.stride)
             im = im[:, :, ::-1].transpose(2, 0, 1)
             im = np.ascontiguousarray(im)
@@ -190,6 +198,36 @@ class COCODataset(torch.utils.data.Dataset):
             bbox_b.append(bbox)
             keypoint_b.append(keypoint)
         return img0, torch.cat(img_b), bboxes0, bbox_b, keypoints0, keypoint_b, img_name
+
+    def only_keypoint_collate_fn(self, batch):
+        img0, img, bboxes0, bboxes, keypoints0, keypoints, img_name = zip(*batch)
+        img_b, keypoint_b, img_name_b = [], [], []
+        for i, (im, bbox, keypoint) in enumerate(zip(img, bboxes, keypoints)):
+            if sum(keypoint[0]) == 0:
+                continue
+            xyxy = self.xywh2xyxy(bbox)
+            cropped_img, adj_keypoints = crop_bbox(im, xyxy, keypoint, self.crop_img_size, normalize=False)
+            img_b.append(torch.from_numpy(np.ascontiguousarray(cropped_img[:, :, :, ::-1].transpose(0, 3, 1, 2))))
+            keypoint_b.append(torch.from_numpy(adj_keypoints))
+            img_name_b.append(img_name[i])
+
+        img_b = torch.cat(img_b)
+        print(img_b.shape)
+        img_b = img_b[: max_keypoint_det]
+        print(img_b.shape)
+
+        keypoint_b = torch.cat(keypoint_b)
+        keypoint_b = keypoint_b[: max_keypoint_det]
+        return img_b, keypoint_b, img_name_b
+
+    @staticmethod
+    def xywh2xyxy(xywhs):
+        xyxy = []
+        for xywh in xywhs:
+            xywh[2] = xywh[0] + xywh[2]
+            xywh[3] = xywh[1] + xywh[3]
+            xyxy.append(xywh)
+        return xyxy
 
 
 data_root = "/media/daton/D6A88B27A88B0569/dataset/coco"
@@ -203,7 +241,7 @@ train_transform = AT.Compose([
     AT.ColorJitter(),
     AT.HueSaturationValue(),
     AT.RandomBrightnessContrast(),
-    AT.Normalize(),
+    #AT.Normalize(),
     AT.Cutout(max_h_size=16, max_w_size=16)
 ])
 
@@ -236,7 +274,7 @@ def get_coco2017_train_dataloader(img_size: (int, int),
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
-        shuffle=False,
+        shuffle=True,
         collate_fn=dataset.collate_fns[mode]
     )
     return dataloader
@@ -257,74 +295,23 @@ def get_coco2017dataloader(img_size: (int, int),
 if __name__ == "__main__":
     import cv2
 
-    '''train_dataloader, valid_dataloader = get_coco2017dataloader(
-        img_size=412, mode="detection", target_cls="person"
-    )
+    # only keypoint dataloader
+    valid_dataloader = get_coco2017_valid_dataloader(img_size=128,
+                                                     mode="only keypoint",
+                                                     batch_size=16,
+                                                     transform=train_transform)
+    for img, keypoint_b, img_name in valid_dataloader:
+        print("\n#####################")
+        print(img.shape, keypoint_b.shape)
 
-    for img0, img_b, bboxes0, bbox_b, img_name in train_dataloader:
-        print("\n================")
-        print(img_b.shape)
-        for img, bbox in zip(img_b, bbox_b):
-            _, w, h = img.size()
-            cpwh = xywh2cpwh(bbox)
-            print(cpwh)
-        break'''
-
-
-    dataset = COCODataset(valid_root, annot_root,
-                          labels=label_file, keypoint_labels=keypoint_label_file,
-                          target_cls="person", mode="keypoint",
-                          transform=train_transform)
-    labels = dataset.labels
-    '''
-    dataloader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=32,
-        shuffle=True,
-        collate_fn=dataset.keypoint_collate_fn
-    )
-
-    for img0, img_b, bboxes0, bbox_b, keypoints0, keypoint_b, img_name in dataloader:
-        print("\n================")
-        print(img_b.shape)
-        for img, bbox, keypoint in zip(img_b, bbox_b, keypoint_b):
-            print("")
-            _, w, h = img.size()
-            xyxy = xywh2xyxy(bbox)
-            xyxy_n = normalize_xyxy(xyxy, w, h)
-            keypoint_n = normalize_keypoint(keypoint.float(), w, h)
+        for i, (im, keypoint) in enumerate(zip(img, keypoint_b)):
+            print("\n---")
+            print(im.shape)
+            print(keypoint.shape)
             print(keypoint)
-            print(keypoint_n)
-        break'''
 
-
-    for img0, img, bboxes0, bboxes, keypoints0, keypoints, img_name in dataset:
-        print("\n---")
-        print(img0.shape)
-        print(img.shape)
-        print(bboxes0.shape, bboxes.shape)
-        print(keypoints0.shape, keypoints.shape)
-        print(img_name)
-
-        for *xywh, conf, cls in bboxes0:
-            xyxy = xywh2xyxy(torch.tensor(xywh).view(1, 4)).view(-1)
-            c = int(cls)
-            label = labels[c]
-            plot_one_box(xyxy, img0, label=label, color=colors(c, True))
-
-        for kp in keypoints0:
-            plot_one_keypoint(kp, img0)
-
-        '''
-        for *xywh, conf, cls in bboxes:
-            xyxy = xywh2xyxy(torch.tensor(xywh).view(1, 4)).view(-1)
-            c = int(cls)
-            label = labels[c]
-            plot_one_box(xyxy, img_lt, label=label, color=colors(c, True))
-
-        for kp in keypoints:
-            plot_one_keypoint(kp, img_lt)'''
-
-        cv2.imshow("img0", img0)
-        cv2.imshow("img", img)
-        cv2.waitKey(0)
+            imm = im.numpy().transpose(1, 2, 0).copy()
+            plot_one_keypoint(keypoint, imm)
+            cv2.imshow("imm", imm)
+            cv2.waitKey(0)
+        break

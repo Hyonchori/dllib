@@ -55,8 +55,8 @@ class BBoxNet(nn.Module):
                 x = layer(x)
             output.append(x)
 
-        bs, _, ny, nx = output[-1].shape
-        result = output[-1].permute(0, 2, 3, 1).contiguous().sigmoid()
+        bs, no, ny, nx = output[-1].shape
+        result = output[-1].view(bs, 1, no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
         if self.grid.shape[1:3] != result.shape[1:3]:
             self.grid = self._make_grid(nx, ny)
         self.grid = self.grid.to(result.device)
@@ -86,6 +86,7 @@ class ClsNet(nn.Module):
 
         self.input_shape = self.yaml["expected_input_shape"]
         self.strides = self.yaml["strides"]
+        self.nc = self.yaml["nc"]
 
         self.model = parse_model_from_cfg(self.yaml, self.mode)
         if info:
@@ -115,11 +116,11 @@ class ClsNet(nn.Module):
             else:
                 x = layer(x)
             output.append(x)
-        bs, _, ny, nx = output[-1].shape
-        result = output[-1].permute(0, 2, 3, 1).contiguous().softmax(-1)
+        bs, no, ny, nx = output[-1].shape
+        result = output[-1].view(bs, 1, no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
         return result
 
-class BuildDetectionHead(nn.Module):
+class BuildSeparateDetectionHead(nn.Module):
     def __init__(self, cfg, info=False):
         super().__init__()
         self.mode = "head"
@@ -137,6 +138,7 @@ class BuildDetectionHead(nn.Module):
         cls_yaml["architecture"] = cls_yaml["cls_architecture"]
         self.bboxnet = BBoxNet(bbox_yaml, False)
         self.clsnet = ClsNet(cls_yaml, False)
+        self.nc = self.clsnet.nc
 
     def forward(self, xs, epoch=None):
         output = xs
@@ -148,7 +150,7 @@ class BuildDetectionHead(nn.Module):
 
 if __name__ == "__main__":
     cfg = "../cfgs/base_detection_head2.yaml"
-    head = BuildDetectionHead(cfg, info=True)
+    head = BuildSeparateDetectionHead(cfg, info=True)
 
     bs = 1
     sample = [
@@ -159,13 +161,14 @@ if __name__ == "__main__":
 
     pred = head(sample)
     for i in range(len(pred)):
-        bs, _, _, info = pred[i].shape
+        bs, _, _, _, info = pred[i].shape
         print(pred[i].shape)
         pred[i] = pred[i].view(bs, -1, info)
 
     pred = torch.cat(pred, 1)
     print(pred.shape)
     print(pred[..., :5])
+    print(torch.sum(pred[..., 5:]))
 
     from dllib.utils.bbox_utils import non_maximum_suppression
     pred = non_maximum_suppression(pred)

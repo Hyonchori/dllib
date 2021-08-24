@@ -59,12 +59,10 @@ def main(opt):
         img0 = img0 if webcam else [img0]
         img_in = img.to(device).float() if not opt.half else img.to(device).half()
         img_in /= 255.
-        print(img_in.shape, img0[0].shape)
 
         pred = model(img_in)
         for i in range(len(pred)):
-            print(pred[i].shape)
-            bs, _, _, info = pred[i].shape
+            bs, _, _, _, info = pred[i].shape
             pred[i] = pred[i].view(bs, -1, info)
         pred = torch.cat(pred, 1)
 
@@ -102,7 +100,7 @@ def parse_opt(known=False):
     parser.add_argument("--auto", type=bool, default=True)
     parser.add_argument("--labels", type=str, default="../data/for_train/coco_labels91.txt")
     parser.add_argument("--target_cls", type=int, default=None)
-    parser.add_argument("--conf_thr", type=float, default=0.5)
+    parser.add_argument("--conf_thr", type=float, default=0.001)
     parser.add_argument("--iou_thr", type=float, default=0.05)
     parser.add_argument("--half", action="store_true", help='use FP16 half-precision inference')
     parser.add_argument("--save_dir", type=str, default="../runs")

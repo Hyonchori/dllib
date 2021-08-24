@@ -54,7 +54,8 @@ class BuildBackbone(nn.Module):
 
 
 if __name__ == "__main__":
-    cfg = "../cfgs/base_backbone_m.yaml"
+    # base feature extractor
+    '''cfg = "../cfgs/base_backbone_m.yaml"
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
@@ -62,4 +63,16 @@ if __name__ == "__main__":
 
     pred = bb(sample, epoch=20)
     for p in pred:
+        print(p.size())'''
+
+    # keypoint feature extractor
+    cfg = "../cfgs/keypoint_backbone.yaml"
+    bb = BuildBackbone(cfg, info=True)
+
+    bs = 1
+    sample = torch.randn(bs, 3, 128, 128)
+
+    pred = bb(sample, epoch=20)
+    for p in pred:
         print(p.size())
+
