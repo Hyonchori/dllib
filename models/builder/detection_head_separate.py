@@ -159,6 +159,7 @@ if __name__ == "__main__":
         torch.randn(bs, 1024, 13, 13),
     ]
 
+
     pred = head(sample)
     for i in range(len(pred)):
         bs, _, _, _, info = pred[i].shape
@@ -167,6 +168,8 @@ if __name__ == "__main__":
 
     pred = torch.cat(pred, 1)
     print(pred.shape)
+    print(pred[..., :5])
+    print(pred[..., 5:])
 
     from dllib.utils.bbox_utils import non_maximum_suppression
     pred = non_maximum_suppression(pred)

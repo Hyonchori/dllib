@@ -30,7 +30,7 @@ bbox_architecture:
     [Downsample, [3, -1, 2]],
     [PWConv, [768, 128]],
     [BottleneckCSP, [128, 128, 6, 0.5, True, False]],
-    [Bottleneck, [128, 5, 1, 1, None, nn.Sigmoid()]]
+    [Bottleneck, [128, 5, 1, 1, nn.Sigmoid()]]
   ]
 
 cls_architecture:
@@ -45,5 +45,5 @@ cls_architecture:
     [ Downsample, [ 3, -1, 2 ] ],
     [ PWConv, [ 768, 128 ] ],
     [ BottleneckCSP, [ 128, 128, 6, 0.5, True, False ] ],
-    [ Bottleneck, [ 128, 91, 1, 1, None, nn.Softmax(dim=1) ] ]
+    [ Bottleneck, [ 128, 91, 1, 1, nn.Softmax(dim=1) ] ]
   ]
