@@ -40,7 +40,7 @@ def main(opt):
                                                                 train_transform=train_transform)
     compute_loss = ComputeKeypointLoss(model, img_size=(opt.img_size, opt.img_size))
     optimizer = optim.Adam(model.parameters(), lr=0.00005)
-    lr_sch = CosineAnnealingWarmUpRestarts(optimizer, T_0=10, T_mult=1, eta_max=0.001, T_up=3, gamma=0.7)
+    lr_sch = CosineAnnealingWarmUpRestarts(optimizer, T_0=10, T_mult=1, eta_max=0.001, T_up=10, gamma=0.7)
 
     loss_weight = [1, 1, 1]  # iou, conf, cls
 
@@ -152,8 +152,8 @@ def parse_opt(known=False):
     parser.add_argument("--weights", type=str, help="initial weights path",
                         default="../../weights/keypoint_detector.pt")
     parser.add_argument("--start_epoch", type=int, default=0)
-    parser.add_argument("--end_epoch", type=int, default=2)
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--end_epoch", type=int, default=200)
+    parser.add_argument("--batch_size", type=int, default=96)
     parser.add_argument("--img_size", type=int, default=128)
     parser.add_argument("--save_dir", type=str, default="../../weights")
     parser.add_argument("--name", type=str, default="keypoint_detector")

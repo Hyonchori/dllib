@@ -10,7 +10,7 @@ from dllib.utils.img_utils import colors, letterbox, plot_one_box, plot_one_keyp
 from dllib.utils.bbox_utils import xywh2xyxy, letterboxed_xywh, letterboxed_keypoint, \
                                 normalize_xyxy, normalize_keypoint, xywh2cpwh, unnormalize_keypoint
 
-max_keypoint_det = 90
+max_keypoint_det = 124
 class COCODataset(torch.utils.data.Dataset):
     def __init__(self,
                  img_root: str,
