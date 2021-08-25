@@ -69,10 +69,10 @@ class ComputeDetectionLoss:
                     target_pos_conf = torch.ones((valid_p.shape[0], 1), device=self.device)
                     target_neg_conf = torch.zeros((zero_p.shape[0], 1), device=self.device)
                     conf_loss_pos = self.BCEobj(valid_p[:, 4:5], target_pos_conf)
-                    conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf))
+                    conf_loss_neg = self.BCEobj(zero_p[:, 4:5], target_neg_conf)
+                    conf_loss = conf_loss_pos + conf_loss_neg
                 else:
                     conf_loss = torch.tensor(0, device=self.device)
-
 
                 iou_loss = torch.mean(1 - ious[valid_idx])
 
