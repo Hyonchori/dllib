@@ -136,8 +136,8 @@ class BuildSeparateDetectionHead(nn.Module):
         bbox_yaml, cls_yaml = self.yaml.copy(), self.yaml.copy()
         bbox_yaml["architecture"] = bbox_yaml["bbox_architecture"]
         cls_yaml["architecture"] = cls_yaml["cls_architecture"]
-        self.bboxnet = BBoxNet(bbox_yaml, False)
-        self.clsnet = ClsNet(cls_yaml, False)
+        self.bboxnet = BBoxNet(bbox_yaml, True)
+        self.clsnet = ClsNet(cls_yaml, True)
         self.nc = self.clsnet.nc
 
     def forward(self, xs, epoch=None):
@@ -167,11 +167,9 @@ if __name__ == "__main__":
 
     pred = torch.cat(pred, 1)
     print(pred.shape)
-    print(pred[..., :5])
-    print(torch.sum(pred[..., 5:]))
 
     from dllib.utils.bbox_utils import non_maximum_suppression
     pred = non_maximum_suppression(pred)
     print("")
     for p in pred:
-        print(p)
+        print(p.shape)

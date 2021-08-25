@@ -55,7 +55,7 @@ class BuildBackbone(nn.Module):
 
 if __name__ == "__main__":
     # base feature extractor
-    '''cfg = "../cfgs/base_backbone_m.yaml"
+    cfg = "../cfgs/base_backbone_m.yaml"
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
@@ -63,10 +63,10 @@ if __name__ == "__main__":
 
     pred = bb(sample, epoch=20)
     for p in pred:
-        print(p.size())'''
+        print(p.size())
 
     # keypoint feature extractor
-    cfg = "../cfgs/keypoint_backbone.yaml"
+    '''cfg = "../cfgs/keypoint_backbone.yaml"
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
@@ -74,5 +74,5 @@ if __name__ == "__main__":
 
     pred = bb(sample, epoch=20)
     for p in pred:
-        print(p.size())
+        print(p.size())'''
 

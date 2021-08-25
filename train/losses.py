@@ -40,14 +40,15 @@ class ComputeDetectionLoss:
     def __init__(self, model, iou_thr=0.4):
         self.device = next(model.parameters()).device
 
-        self.BCEcls = FocalLoss(nn.BCEWithLogitsLoss())
-        self.BCEobj = FocalLoss(nn.BCEWithLogitsLoss())
+        self.BCEcls = FocalLoss(nn.BCELoss())
+        self.BCEobj = FocalLoss(nn.BCELoss())
         self.iou_thr = iou_thr
         self.nc = model.head.nc
 
     def __call__(self, pred, targets, epoch=None):
         # pred: (bs, total_predicted_bbox_num, 4 + 1 + cls_num)
         # target: (bs, total_target_bbox_num, 4 + 1 + cls)
+        # total loss: bbox_loss + conf_loss + cls_loss)
         total_loss = torch.zeros(3, device=self.device)
         for p, t in zip(pred, targets):
             p_xyxys = cpwh2xyxy(p)
@@ -68,7 +69,7 @@ class ComputeDetectionLoss:
                     target_pos_conf = torch.ones((valid_p.shape[0], 1), device=self.device)
                     target_neg_conf = torch.zeros((zero_p.shape[0], 1), device=self.device)
                     conf_loss_pos = self.BCEobj(valid_p[:, 4:5], target_pos_conf)
-                    conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf) * 0.3)
+                    conf_loss = torch.mean(conf_loss_pos + self.BCEobj(zero_p[:, 4:5], target_neg_conf))
                 else:
                     conf_loss = torch.tensor(0, device=self.device)
 
@@ -89,4 +90,38 @@ class ComputeDetectionLoss:
             loss_per_img /= n
             total_loss += loss_per_img
         total_loss /= len(pred)
+        return total_loss
+
+
+class ComputeKeypointLoss:
+    def __init__(self, model, img_size: (int, int)):
+        self.device = next(model.parameters()).device
+
+        self.BCEv = FocalLoss(nn.BCEWithLogitsLoss())
+        self.MSE = nn.MSELoss()
+        self.img_size = img_size
+
+    def __call__(self, pred, targets, epoch=None):
+        # pred: (bs, (x, y, v) * 17)
+        # targets: (bs, (x, y, v) * 17)
+        # total loss: coordinate_loss(x, y) + visible_loss
+        total_loss = torch.zeros(3, device=self.device)
+        v_pred = pred[..., 2::3]
+        v_target = targets[..., 2::3]
+        v_loss = self.BCEv(v_pred, v_target)
+
+        valid_idx = v_target > 0
+
+        x_pred = pred[..., 0::3][valid_idx]
+        x_target = targets[..., 0::3][valid_idx] / self.img_size[0]
+        x_loss = self.MSE(x_pred, x_target)
+
+        y_pred = pred[..., 1::3][valid_idx]
+        y_target = targets[..., 1::3][valid_idx] / self.img_size[1]
+        y_loss = self.MSE(y_pred, y_target)
+
+        total_loss[0] += x_loss
+        total_loss[1] += y_loss
+        total_loss[2] += v_loss
+
         return total_loss

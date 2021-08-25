@@ -109,8 +109,6 @@ def parse_opt(known=False):
     return opt
 
 
-
-
 if __name__ == "__main__":
     opt = parse_opt(True)
     main(opt)

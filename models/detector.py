@@ -47,21 +47,6 @@ class BuildDetector(nn.Module):
 if __name__ == "__main__":
 
     # separate object detector
-    '''bb_cfg = "cfgs/base_backbone_m.yaml"
-    n_cfg = "cfgs/base_neck_m.yaml"
-    h_cfg = "cfgs/base_detection_head2.yaml"
-    model = BuildDetector(bb_cfg,
-                          n_cfg,
-                          h_cfg,
-                          head_mode="separate",
-                          True)
-    bs = 1
-    sample = torch.randn(bs, 3, 416, 416)
-    pred = model(sample, epoch=20)
-    for p in pred:
-        print(p.size())'''
-
-    # keypoint detector
     bb_cfg = "cfgs/base_backbone_m.yaml"
     n_cfg = "cfgs/base_neck_m.yaml"
     h_cfg = "cfgs/base_detection_head2.yaml"
@@ -75,3 +60,17 @@ if __name__ == "__main__":
     pred = model(sample, epoch=20)
     for p in pred:
         print(p.size())
+
+    # keypoint detector
+    '''bb_cfg = "cfgs/keypoint_backbone.yaml"
+    n_cfg = None
+    h_cfg = "cfgs/keypoint_detection_head.yaml"
+    model = BuildDetector(bb_cfg,
+                          n_cfg,
+                          h_cfg,
+                          head_mode="keypoint",
+                          info=True)
+    bs = 3
+    sample = torch.randn(bs, 3, 128, 128)
+    pred = model(sample, epoch=20)
+    print(pred.shape)'''

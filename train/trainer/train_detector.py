@@ -116,7 +116,7 @@ def train(model, optimizer, epoch, dataloader, compute_loss, loss_weight, device
 
         for k, (l, w) in enumerate(zip(loss, loss_weight)):
             loss[k] = loss[k] * w
-        loss = loss.mean()
+        loss = loss.sum()
         loss.backward()
         optimizer.step()
 

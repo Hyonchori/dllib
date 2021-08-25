@@ -51,7 +51,8 @@ class BuildKeypointDetectionHead(nn.Module):
             else:
                 x = layer(x)
             output.append(x)
-        result = output[-1].view(-1)
+        bs, _, _, _ = output[-1].shape
+        result = output[-1].view(bs, -1)
         return result
 
 

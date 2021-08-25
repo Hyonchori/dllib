@@ -212,9 +212,7 @@ class COCODataset(torch.utils.data.Dataset):
             img_name_b.append(img_name[i])
 
         img_b = torch.cat(img_b)
-        print(img_b.shape)
         img_b = img_b[: max_keypoint_det]
-        print(img_b.shape)
 
         keypoint_b = torch.cat(keypoint_b)
         keypoint_b = keypoint_b[: max_keypoint_det]
@@ -235,8 +233,8 @@ train_root = os.path.join(data_root, "train2017", "train2017")
 valid_root = os.path.join(data_root, "val2017", "val2017")
 annot_root = os.path.join(data_root, "annotations_trainval2017", "annotations")
 label_file = os.path.join(data_root, "coco_labels91.txt")
-#keypoint_label_file = os.path.join(data_root, "coco_keypoint_labels.txt")
-keypoint_label_file = None
+keypoint_label_file = os.path.join(data_root, "coco_keypoint_labels.txt")
+#keypoint_label_file = None
 train_transform = AT.Compose([
     AT.ColorJitter(),
     AT.HueSaturationValue(),

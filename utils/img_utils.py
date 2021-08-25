@@ -85,13 +85,14 @@ def plot_one_box(x: torch.tensor,
 def plot_one_keypoint(kp: torch.tensor,
                       im: np.ndarray,
                       color: tuple=(255, 255, 255),
-                      radius: int=2):
+                      radius: int=2,
+                      v_thr: int=0.2):
     xs = kp[0::3]
     ys = kp[1::3]
     vs = kp[2::3]
 
     for x, y, v in zip(xs, ys, vs):
-        if v > 0:
+        if v > v_thr:
             cv2.circle(im, (int(x), int(y)), radius, color, -1)
 
 
@@ -124,13 +125,13 @@ def crop_bbox(img: np.ndarray,
                     if x != 0 else [0]
                 adj_keypoint += [((y - bbox[1]) * ratio[1] + dh) / norm[1]] \
                     if y != 0 else [0]
-                adj_keypoint += [v / 2.]
+                adj_keypoint += [1 if v > 0 else 0]
         else:
             norm = (1, 1) if not normalize else cropped_img.shape[:2]
             for x, y, v in zip(xs, ys, vs):
                 adj_keypoint += [(x - bbox[0]) / norm[0]] if x != 0 else [0]
                 adj_keypoint += [(y - bbox[1]) / norm[1]] if y != 0 else [0]
-                adj_keypoint += [v / 2.]
+                adj_keypoint += [1 if v > 0 else 0]
         imgs.append(cropped_img)
         adj_keypoints.append(adj_keypoint)
     return np.array(imgs), np.array(adj_keypoints)
