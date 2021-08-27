@@ -68,11 +68,12 @@ def plot_one_box(x: torch.tensor,
                  im: np.ndarray,
                  color: tuple=(128, 128, 128),
                  label: str=None,
-                 line_thickness: int=2):
+                 line_thickness: int=2,
+                 scale: int=1.):
     # Plots one bounding box on image 'im' using OpenCV
     assert im.data.contiguous, 'Image not contiguous. Apply np.ascontiguousarray(im) to plot_on_box() input image.'
     tl = line_thickness or round(0.002 * (im.shape[0] + im.shape[1]) / 2) + 1  # line/font thickness
-    c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
+    c1, c2 = (int(x[0] * scale), int(x[1] * scale)), (int(x[2] * scale), int(x[3] * scale))
     cv2.rectangle(im, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
     if label:
         tf = max(tl - 1, 1)  # font thickness

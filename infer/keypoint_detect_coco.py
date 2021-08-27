@@ -18,7 +18,7 @@ def main(opt):
                           neck_cfg=opt.neck_cfg,
                           detector_head_cfg=opt.head_cfg,
                           info=True,
-                          head_mode="keypoint").cuda()
+                          head_mode="keypoint").cuda().eval()
     if opt.weights is not None:
         if os.path.isfile(opt.weights):
             wts = torch.load(opt.weights)
@@ -41,8 +41,7 @@ def main(opt):
             labels = np.array([data[i - 1][: -1] for i in range(1, len(data) + 1)])
     print(labels)
 
-    model.eval()
-    for img_b, keypoint_b, img_name in valid_dataloader:
+    for img_b, keypoint_b, img_name in train_dataloader:
         img0 = img_b.numpy().transpose(0, 2, 3, 1)
         img_b = img_b.to(device) / 255.
         pred = model(img_b.float())
@@ -71,8 +70,6 @@ def main(opt):
             cv2.waitKey(0)
 
 
-
-
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--backbone_cfg", type=str, help="backbone.yaml path",
@@ -91,7 +88,7 @@ def parse_opt(known=False):
     parser.add_argument("--name", type=str, default="keypoint_detector")
     parser.add_argument("--save_interval", type=int, default=10)
 
-    parser.add_argument("--v_thr", type=float, default=0.3)
+    parser.add_argument("--v_thr", type=float, default=0.7)
     parser.add_argument("--labels", type=str, default="../data/for_train/coco_keypoint_labels.txt")
     opt = parser.parse_known_args()[0] if known else parser.parse_args()
     return opt

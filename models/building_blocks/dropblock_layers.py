@@ -65,7 +65,7 @@ class LSDropBlock(nn.Module):  # Linearly scheduled drop block layer
 
     def forward(self, x, epoch=None):
         if epoch is not None:
-            idx = min(epoch, len(self.drop_values))
+            idx = min(epoch, len(self.drop_values) - 1)
             self.dropblock.drop_prob = self.drop_values[idx]
         return self.dropblock(x)
 

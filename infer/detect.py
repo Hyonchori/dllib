@@ -53,7 +53,7 @@ def main(opt):
     if opt.labels is not None:
         with open(opt.labels) as f:
             data = f.readlines()
-            labels = {i: data[i - 1][:-1] for i in range(1, len(data) + 1)}
+            labels = {i - 1: data[i - 1][:-1] for i in range(1, len(data) + 1)}
 
     for img0, img, path in dataset:
         img0 = img0 if webcam else [img0]
@@ -73,7 +73,7 @@ def main(opt):
             im0 = cv2.cvtColor(im0, cv2.COLOR_RGB2BGR)
             if len(det):
                 for *xyxy, conf, cls in reversed(det):
-                    c = int(cls) + 1
+                    c = int(cls)
                     label = "{} {:.2f}".format(labels[c], conf) if labels is not None else None
                     plot_one_box(xyxy, im0, colors(c, True), label)
 
