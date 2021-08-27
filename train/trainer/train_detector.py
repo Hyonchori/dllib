@@ -70,7 +70,7 @@ def main(opt):
             with open(log_save_dir, "r") as f:
                 reader = csv.reader(f)
                 logs = list(reader)
-                logs.append(train_loss + valid_loss)
+                logs.append(train_loss + valid_loss + [optimizer.param_groups[0]["lr"]])
             with open(log_save_dir, "w") as f:
                 writer = csv.writer(f)
                 for log in logs:
@@ -78,7 +78,7 @@ def main(opt):
         else:
             with open(log_save_dir, "w") as f:
                 writer = csv.writer(f)
-                writer.writerow(train_loss + valid_loss)
+                writer.writerow(train_loss + valid_loss + [optimizer.param_groups[0]["lr"]])
 
         for k, (l, w) in enumerate(zip(valid_loss, loss_weight)):
             valid_loss[k] = valid_loss[k] * w
@@ -164,8 +164,8 @@ def parse_opt(known=False):
                         default="../../weights/base_detector.pt")
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--end_epoch", type=int, default=15)
-    parser.add_argument("--batch_size", type=int, default=18)
-    parser.add_argument("--img_size", type=int, default=412)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--img_size", type=int, default=416)
     parser.add_argument("--save_dir", type=str, default="../../weights")
     parser.add_argument("--name", type=str, default="base_detector")
     parser.add_argument("--save_interval", type=int, default=10)

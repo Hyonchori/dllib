@@ -59,7 +59,7 @@ if __name__ == "__main__":
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
-    sample = torch.randn(bs, 3, 412, 412)
+    sample = torch.randn(bs, 3, 416, 416)
 
     pred = bb(sample, epoch=20)
     for p in pred:
@@ -74,5 +74,5 @@ if __name__ == "__main__":
 
     pred = bb(sample, epoch=20)
     for p in pred:
-        print(p.size())'''
-
+        print(p.size())
+'''

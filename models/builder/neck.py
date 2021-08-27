@@ -64,9 +64,9 @@ if __name__ == "__main__":
 
     bs = 1
     sample = [
-        torch.randn(bs, 128, 52, 52),
-        torch.randn(bs, 256, 26, 26),
-        torch.randn(bs, 512, 13, 13),
+        torch.randn(bs, 192, 52, 52),
+        torch.randn(bs, 384, 26, 26),
+        torch.randn(bs, 768, 13, 13),
     ]
 
     pred = neck(sample)

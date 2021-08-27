@@ -91,7 +91,7 @@ class Bottleneck(nn.Module):
         self.act = nn.Mish() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
         if shortcut:
             self.downsampling = PWConv(c1, c2, s) if c1 != c2 \
-                else (nn.MaxPool2d(k, stride=s) if s != 1 else nn.Identity())
+                else (nn.MaxPool2d(k, stride=s, padding=autopad(k)) if s != 1 else nn.Identity())
         self.shortcut = shortcut
 
     def forward(self, x):

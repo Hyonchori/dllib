@@ -7,21 +7,21 @@ expected_input_shape:
 architecture:
   # [module, args]
   [
-    [Focus, [3, 36]],
-    [FusedBottleneck, [36, 64, 3, 2, True, False]],
-    [BottleneckCSP, [64, 64, 2, 0.5, True, False]],
+    [Focus, [3, 48]],
+    [FusedBottleneck, [48, 96, 3, 2, True, False]],
+    [BottleneckCSP, [96, 96, 2, 0.5, True, False]],
 
-    [FusedBottleneck, [64, 128, 3, 2, True, False]],
-    [BottleneckCSP, [128, 128, 6, 0.5, True, False]],
+    [FusedBottleneck, [96, 192, 3, 2, True, False]],
+    [BottleneckCSP, [192, 192, 6, 0.5, True, False]],
     [LSDropBlock, [7, 30]],
 
-    [FusedBottleneck, [128, 256, 3, 2, True, True]],
-    [BottleneckCSP, [256, 256, 6, 0.5, True, False]],
+    [FusedBottleneck, [192, 384, 3, 2, True, True]],
+    [BottleneckCSP, [384, 384, 6, 0.5, True, False]],
     [LSDropBlock, [5, 30]],
 
-    [FusedBottleneck, [256, 512, 3, 2, True, True]],
-    [SPP, [512, 512, [5, 9, 13]]],
-    [BottleneckCSP, [512, 512, 6, 0.5, True, False]],
+    [FusedBottleneck, [384, 768, 3, 2, True, True]],
+    [SPP, [768, 768, [5, 9, 13]]],
+    [BottleneckCSP, [768, 768, 2, 0.5, True, False]],
     [LSDropBlock, [2, 30]],
   ]
 

@@ -70,4 +70,3 @@ if __name__ == "__main__":
     pred = head(sample)
     print(pred.shape)
     print(pred)
-    print(head)

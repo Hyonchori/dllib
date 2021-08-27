@@ -19,5 +19,6 @@ architecture:
     [ConcatLayer, [1, [-1, -3, -5]]],
     [PWConv, [896, 128]],
     [BottleneckCSP, [128, 128, 4]],
-    [ConvBnAct, [128, 51, 8, 1, 0, 1, nn.Sigmoid(), False]]
+    [Bottleneck, [128, 51]],
+    [ConvBnAct, [51, 51, 8, 1, 0, 1, nn.Sigmoid(), False]]
   ]

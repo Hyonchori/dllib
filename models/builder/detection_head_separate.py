@@ -154,9 +154,9 @@ if __name__ == "__main__":
 
     bs = 1
     sample = [
-        torch.randn(bs, 256, 52, 52),
+        torch.randn(bs, 384, 52, 52),
         torch.randn(bs, 512, 26, 26),
-        torch.randn(bs, 1024, 13, 13),
+        torch.randn(bs, 768, 13, 13),
     ]
 
 

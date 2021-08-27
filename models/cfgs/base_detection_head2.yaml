@@ -14,36 +14,34 @@ anchors:
   - [10,13, 16,30, 33,23]  # /8
 
 expected_input_shape:
-  - [256, 52, 52]
+  - [384, 52, 52]
   - [512, 26, 26]
-  - [1024, 13, 13]
+  - [768, 13, 13]
 
 bbox_architecture:
   # [layer_idx, iter, module, args]
   [
-    [ PWConv, [ 1024, 256 ] ],
+    [ PWConv, [ 768, 256 ] ],
     [ Upsample, [ None, 4, "nearest", -1 ] ],
     [ GetLayer, [ -4 ] ],
     [ PWConv, [ 512, 256 ] ],
     [ Upsample, [ None, 2, "nearest", -1 ] ],
     [ ConcatLayer, [ 1, [ -1, -4, -8 ] ] ],
     [Downsample, [3, -1, 2]],
-    [PWConv, [768, 128]],
-    [BottleneckCSP, [128, 128, 6, 0.5, True, False]],
-    [Bottleneck, [128, 5, 1, 1, nn.Sigmoid()]]
+    [BottleneckCSP, [896, 768, 2, 0.5, False, False]],
+    [Bottleneck, [768, 5, 3, 1, nn.Sigmoid()]]
   ]
 
 cls_architecture:
   # [module, args]
   [
-    [ PWConv, [ 1024, 256 ] ],
+    [ PWConv, [ 768, 256 ] ],
     [ Upsample, [ None, 4, "nearest", -1 ] ],
     [ GetLayer, [ -4 ] ],
     [ PWConv, [ 512, 256 ] ],
     [ Upsample, [ None, 2, "nearest", -1 ] ],
     [ ConcatLayer, [ 1, [ -1, -4, -8 ] ] ],
     [ Downsample, [ 3, -1, 2 ] ],
-    [ PWConv, [ 768, 128 ] ],
-    [ BottleneckCSP, [ 128, 128, 6, 0.5, True, False ] ],
-    [ Bottleneck, [ 128, 91, 1, 1, nn.Softmax(dim=1) ] ]
+    [ BottleneckCSP, [ 896, 768, 2, 0.5, False, False ] ],
+    [ Bottleneck, [ 768, 91, 3, 1, nn.Softmax(dim=1) ] ]
   ]

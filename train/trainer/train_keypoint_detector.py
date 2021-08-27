@@ -71,7 +71,7 @@ def main(opt):
             with open(log_save_dir, "r") as f:
                 reader = csv.reader(f)
                 logs = list(reader)
-                logs.append(train_loss + valid_loss)
+                logs.append(train_loss + valid_loss + [optimizer.param_groups[0]["lr"]])
             with open(log_save_dir, "w") as f:
                 writer = csv.writer(f)
                 for log in logs:
@@ -79,7 +79,7 @@ def main(opt):
         else:
             with open(log_save_dir, "w") as f:
                 writer = csv.writer(f)
-                writer.writerow(train_loss + valid_loss)
+                writer.writerow(train_loss + valid_loss + [optimizer.param_groups[0]["lr"]])
 
         for k, (l, w) in enumerate(zip(valid_loss, loss_weight)):
             valid_loss[k] = valid_loss[k] * w
