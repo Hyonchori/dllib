@@ -41,7 +41,7 @@ def main(opt):
             labels = np.array([data[i - 1][: -1] for i in range(1, len(data) + 1)])
     print(labels)
 
-    for img_b, keypoint_b, img_name in train_dataloader:
+    for img_b, keypoint_b, img_name in valid_dataloader:
         img0 = img_b.numpy().transpose(0, 2, 3, 1)
         img_b = img_b.to(device) / 255.
         pred = model(img_b.float())
