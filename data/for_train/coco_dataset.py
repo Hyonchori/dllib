@@ -168,14 +168,14 @@ class COCODataset(torch.utils.data.Dataset):
     def detection_collate_fn(self, batch):
         img0, img, bboxes0, bboxes, img_name = zip(*batch)
         img_b, bbox_b = [], []
-        for im, bbox in zip(img, bboxes):
+        for im, bbox, name in zip(img, bboxes, img_name):
             if len(bbox[0]) == 0:
                 continue
             im, ratio, (dw, dh) = letterbox(im, self.img_size, auto=False, stride=self.stride)
             im = im[:, :, ::-1].transpose(2, 0, 1)
             im = np.ascontiguousarray(im)
             im = torch.from_numpy(im).unsqueeze(0)
-
+            print(name, bbox)
             bbox = letterboxed_xywh(bbox, ratio, dw, dh)
             img_b.append(im)
             bbox_b.append(bbox)
@@ -220,11 +220,9 @@ class COCODataset(torch.utils.data.Dataset):
 
     @staticmethod
     def xywh2xyxy(xywhs):
-        xyxy = []
-        for xywh in xywhs:
-            xywh[2] = xywh[0] + xywh[2]
-            xywh[3] = xywh[1] + xywh[3]
-            xyxy.append(xywh)
+        xyxy = xywhs.copy()
+        xyxy[:, 2] = xywhs[:, 0] + xywhs[:, 2]
+        xyxy[:, 3] = xywhs[:, 1] + xywhs[:, 3]
         return xyxy
 
 
@@ -293,7 +291,7 @@ def get_coco2017dataloader(img_size: (int, int),
 if __name__ == "__main__":
     import cv2
 
-    # only keypoint dataloader
+    '''# only keypoint dataloader
     valid_dataloader = get_coco2017_valid_dataloader(img_size=128,
                                                      mode="only keypoint",
                                                      batch_size=16,
@@ -312,4 +310,26 @@ if __name__ == "__main__":
             plot_one_keypoint(keypoint, imm)
             cv2.imshow("imm", imm)
             cv2.waitKey(0)
-        break
+        break'''
+
+    val_dataloader = get_coco2017_valid_dataloader(img_size=640,
+                                                   mode="detection",
+                                                   target_cls="person",
+                                                   batch_size=16)
+    for img0, img, bbox0, bbox, name in val_dataloader:
+        print("\n####################")
+        print(img.shape, len(bbox))
+
+        for i in range(img.shape[0]):
+            print("\n---")
+            print(name[i])
+            print(bbox[i])
+            xyxy = xywh2xyxy(bbox[i])
+            imm = img[i].numpy().transpose(1, 2, 0).copy()
+            #imm = img0[i]
+
+            for b in xyxy:
+                if b[-1] == 1:
+                    plot_one_box(b, imm, color=colors(b[-1], True))
+            cv2.imshow("imm", imm)
+            cv2.waitKey(0)
