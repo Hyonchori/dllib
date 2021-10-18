@@ -1,0 +1,18 @@
+
+channel_multiple: 1.0
+
+nc: 3
+
+expected_input_shape:
+  - [72, 6, 6]
+
+architecture:
+  [
+    [AvgPool2d, [7, -1]],
+    [nn.Flatten, [1, -1]],
+    [nn.Linear, [72, 3]],
+    [nn.Softmax, [1]]
+  ]
+
+output_layers:
+  [-1]

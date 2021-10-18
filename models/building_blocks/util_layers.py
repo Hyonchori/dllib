@@ -35,3 +35,9 @@ class GetLayer(nn.Module):
         super().__init__()
         self.target_layer = target_layer
 
+
+class AvgPool2d(nn.AvgPool2d):
+    def __init__(self, kernel_size, target_layer=-1, stride=None, padding=0, ceil_mode=False, count_include_pad=True,
+                 divisor_override=None):
+        super().__init__(kernel_size, stride, autopad(kernel_size), ceil_mode, count_include_pad, divisor_override)
+        self.target_layer = target_layer

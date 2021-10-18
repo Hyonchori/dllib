@@ -15,7 +15,7 @@ def model_info(model, verbose=False, input_shape=(3, 640, 640), batch_size=32):
 
     from thop import profile
     print(model.mode)
-    if model.mode in ["backbone", "detector"]:
+    if model.mode in ["backbone", "detector", "classifier"]:
         img = torch.zeros((1, *input_shape), device=next(model.parameters()).device)
         size = (batch_size, *img.shape[1:])
 

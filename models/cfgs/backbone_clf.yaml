@@ -1,0 +1,19 @@
+
+channel_multiple: 1.0
+
+expected_input_shape:
+  [3, 96, 96]
+
+architecture:
+  [
+    [FusedBottleneck, [3, 16, 3, 2, True, False]],
+    [FusedBottleneck, [16, 24, 3, 2, True, False]],
+    [BottleneckCSP, [24, 24, 2, 0.5, True, False]],
+
+    [FusedBottleneck, [24, 48, 3, 2, True, False]],
+    [FusedBottleneck, [48, 72, 3, 2, True, False]],
+    [BottleneckCSP, [72, 72, 2, 0.5, True, False]],
+  ]
+
+output_layers:
+  [-1]

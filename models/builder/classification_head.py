@@ -8,10 +8,10 @@ from dllib.models.builder.parse_model import parse_model_from_cfg
 from dllib.utils.model_utils import model_info
 
 
-class BuildBackbone(nn.Module):
-    def __init__(self, cfg, info=False):
+class BuildClassificationHead(nn.Module):
+    def __init__(self, cfg, info=True):
         super().__init__()
-        self.mode = "backbone"
+        self.mode = "head"
         if isinstance(cfg, dict):
             self.yaml = cfg
         else:
@@ -22,20 +22,27 @@ class BuildBackbone(nn.Module):
                 self.yaml = yaml.safe_load(f)
 
         self.input_shape = self.yaml["expected_input_shape"]
+        self.nc = self.yaml["nc"]
+
         self.model = parse_model_from_cfg(self.yaml, self.mode)
-        self.output_layers = [x - 1 for x in self.yaml["output_layers"] if x > 0]
+        self.output_layers = self.yaml["output_layers"]
         if not self.output_layers:
             self.output_layers = [x for x in self.yaml["output_layers"] if x < 0]
 
         if info:
-            self.stride = self.info(verbose=False)
+            self.info(verbose=False)
+            pass
 
     def info(self, verbose=False, batch_size=1):
-        return model_info(self, verbose, self.input_shape, batch_size)
+        model_info(self, verbose, self.input_shape, batch_size)
 
-    def forward(self, x, epoch=None):
-        output = []
+    def forward(self, xs, epoch=None):
+        output = xs
+        x = None
         for i, layer in enumerate(self.model):
+            if x is None:
+                x = output[-1]
+
             if isinstance(layer, LSDropBlock):
                 x = layer(x, epoch)
             elif isinstance(layer, ConcatLayer):
@@ -54,36 +61,14 @@ class BuildBackbone(nn.Module):
 
 
 if __name__ == "__main__":
-    # base feature extractor
-    cfg = "../cfgs/backbone_clf.yaml"
-    bb = BuildBackbone(cfg, info=True)
+    cfg = "../cfgs/base_classification_head.yaml"
+    head = BuildClassificationHead(cfg, info=True)
 
-    bs = 1
-    sample = torch.randn(bs, 3, 96, 96)
+    bs = 12
+    sample = [
+        torch.randn(bs, 72, 6, 6)
+    ]
 
-    pred = bb(sample, epoch=20)
-    for p in pred:
-        print(p.size())
-
-    '''# base feature extractor
-    cfg = "../cfgs/base_backbone_m.yaml"
-    bb = BuildBackbone(cfg, info=True)
-
-    bs = 1
-    sample = torch.randn(bs, 3, 416, 416)
-
-    pred = bb(sample, epoch=20)
-    for p in pred:
-        print(p.size())'''
-
-    # keypoint feature extractor
-    '''cfg = "../cfgs/keypoint_backbone.yaml"
-    bb = BuildBackbone(cfg, info=True)
-
-    bs = 1
-    sample = torch.randn(bs, 3, 128, 128)
-
-    pred = bb(sample, epoch=20)
-    for p in pred:
-        print(p.size())
-'''
+    pred = head(sample)
+    print(pred)
+    print(pred[0].shape)
