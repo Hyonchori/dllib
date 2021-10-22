@@ -100,10 +100,10 @@ if __name__ == "__main__":
     opt8 = optim.SGD(params=bb.parameters(), lr=0.0001)
     custom = CosineAnnealingWarmUpRestarts(opt8,
                                            T_0=100,
-                                           T_mult=1,
+                                           T_mult=2,
                                            eta_max=0.001,
                                            T_up=10,   # initial warm-up epochs
-                                           gamma=0.7)
+                                           gamma=0.9)
 
     lambdalr_lr = []
     steplr_lr = []

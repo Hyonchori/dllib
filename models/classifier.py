@@ -8,7 +8,7 @@ from dllib.models.builder.classification_head import BuildClassificationHead
 from dllib.utils.model_utils import model_info
 
 
-class BuildDetector(nn.Module):
+class BuildClassifier(nn.Module):
     def __init__(self,
                  backbone_cfg,
                  neck_cfg,
@@ -40,12 +40,12 @@ if __name__ == "__main__":
 
     bb_cfg = "cfgs/backbone_clf.yaml"
     h_cfg = "cfgs/base_classification_head.yaml"
-    model = BuildDetector(bb_cfg,
-                          neck_cfg=None,
-                          head_cfg=h_cfg,
-                          info=True)
+    model = BuildClassifier(bb_cfg,
+                            neck_cfg=None,
+                            head_cfg=h_cfg,
+                            info=True)
     bs = 1
-    sample = torch.randn(bs, 3, 96, 96)
+    sample = torch.randn(bs, 3, 128, 128)
     pred = model(sample, epoch=20)
     for p in pred:
         print(p.size())

@@ -59,7 +59,7 @@ if __name__ == "__main__":
     bb = BuildBackbone(cfg, info=True)
 
     bs = 1
-    sample = torch.randn(bs, 3, 96, 96)
+    sample = torch.randn(bs, 3, 128, 128)
 
     pred = bb(sample, epoch=20)
     for p in pred:

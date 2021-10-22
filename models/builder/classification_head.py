@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     bs = 12
     sample = [
-        torch.randn(bs, 72, 6, 6)
+        torch.randn(bs, 72, 8, 8)
     ]
 
     pred = head(sample)

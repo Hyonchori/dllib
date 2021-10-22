@@ -1,16 +1,16 @@
 
 channel_multiple: 1.0
 
-nc: 3
+nc: 2
 
 expected_input_shape:
-  - [72, 6, 6]
+  - [72, 8, 8]
 
 architecture:
   [
-    [AvgPool2d, [7, -1]],
+    [AvgPool2d, [9, -1]],
     [nn.Flatten, [1, -1]],
-    [nn.Linear, [72, 3]],
+    [nn.Linear, [72, 2]],
     [nn.Softmax, [1]]
   ]
 

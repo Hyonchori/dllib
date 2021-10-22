@@ -125,3 +125,8 @@ class ComputeKeypointLoss:
         total_loss[2] += v_loss
 
         return total_loss
+
+
+class ComputeClfLoss:
+    def __init__(self, model, cls_weight=None):
+        self.device = next(model.parameters()).device
