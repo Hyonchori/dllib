@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    file_name = "../weights/military_civil_clf_log.csv"
+    file_name = "/home/daton/PycharmProjects/pythonProject/ai_cctv/weights/classifier/military_civil_clf7_log.csv"
     with open(file_name) as f:
         reader = csv.reader(f)
         logs = np.array(list(reader)).astype(np.float32)

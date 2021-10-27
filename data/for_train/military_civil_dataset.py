@@ -50,7 +50,8 @@ class MilitaryCivilDataset(torch.utils.data.Dataset):
         return img, img_torch, label, img_path
 
 
-root = "/media/daton/D6A88B27A88B0569/dataset/military-civil"
+#root = "/media/daton/D6A88B27A88B0569/dataset/military-civil"
+root = "/media/daton/D6A88B27A88B0569/dataset/military_civil2"
 train_root = os.path.join(root, "train")
 valid_root = os.path.join(root, "valid")
 
